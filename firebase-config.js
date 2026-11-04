@@ -10,7 +10,7 @@ const firebaseConfig = {
   projectId: "shared-storage-b0719",
   storageBucket: "shared-storage-b0719.firebasestorage.app",
   messagingSenderId: "587435057981",
-  appId: "1:587435057981:web:f3a961bfb909cccab65b54"
+  appId: "1:587435057981:web:e54c6fd20d7ce846b65b54"
 };
 
 // Initialize Firebase
