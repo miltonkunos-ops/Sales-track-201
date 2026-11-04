@@ -1,12 +1,17 @@
-// Copy this file to firebase-config.js and replace the values with your
-// Firebase project's Web App configuration (Project settings > Your apps).
-// This config identifies your Firebase project; Firestore Security Rules
-// are what protect business data. Never put service-account keys here.
-window.SALES_TRACK_FIREBASE_CONFIG = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_WEB_APP_ID"
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBCVt51R7TQKGgYA541a_H5aL6chKBXQJU",
+  authDomain: "shared-storage-b0719.firebaseapp.com",
+  projectId: "shared-storage-b0719",
+  storageBucket: "shared-storage-b0719.firebasestorage.app",
+  messagingSenderId: "587435057981",
+  appId: "1:587435057981:web:f3a961bfb909cccab65b54"
 };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
