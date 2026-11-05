@@ -4,14 +4,30 @@ service cloud.firestore {
     function signedIn() {
       return request.auth != null;
     }
+    function memberDoc(teamId) {
+      return get(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid)).data;
+    }
     function member(teamId) {
       return signedIn()
         && exists(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid))
-        && get(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid)).data.active == true;
+        && memberDoc(teamId).active == true;
     }
     function admin(teamId) {
-      return member(teamId)
-        && get(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid)).data.role == 'Administrator';
+      return member(teamId) && memberDoc(teamId).role == 'Administrator';
+    }
+    // Employees may only use shops listed on their member record.
+    // Records with no shop field belong to the "main" shop.
+    function inMyShop(teamId, shopId) {
+      return admin(teamId)
+        || (member(teamId)
+            && memberDoc(teamId).shops is list
+            && shopId in memberDoc(teamId).shops)
+        || (member(teamId)
+            && !(memberDoc(teamId).shops is list)
+            && shopId == 'main');
+    }
+    function recordShop(data) {
+      return ('shop' in data) ? data.shop : 'main';
     }
 
     match /teams/{teamId} {
@@ -30,11 +46,27 @@ service cloud.firestore {
         allow update, delete: if admin(teamId);
       }
 
+      // Shops: everyone in the team can read the list; only admins change it.
+      match /shops/{shopId} {
+        allow read: if member(teamId);
+        allow create, update, delete: if admin(teamId);
+      }
+
+      // Audit trail: employees can write their own entries but never read them.
+      match /audit/{docId} {
+        allow read: if admin(teamId);
+        allow create: if member(teamId) && inMyShop(teamId, recordShop(request.resource.data));
+        allow update, delete: if admin(teamId);
+      }
+
+      // Business records are limited to the employee's own shop.
       match /{collection}/{docId} {
-        allow read, create, update, delete: if collection in
-          ['items', 'stockin', 'sales', 'tx', 'exp', 'audit', 'users']
-          && member(teamId)
-          && (collection != 'users' || admin(teamId));
+        allow read, delete: if collection in ['items', 'stockin', 'sales', 'tx', 'exp']
+          && inMyShop(teamId, recordShop(resource.data));
+        allow create, update: if collection in ['items', 'stockin', 'sales', 'tx', 'exp']
+          && inMyShop(teamId, recordShop(request.resource.data));
+        // Legacy 'users' collection: administrators only.
+        allow read, write: if collection == 'users' && admin(teamId);
       }
     }
   }
