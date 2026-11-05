@@ -60,8 +60,10 @@ service cloud.firestore {
 
       // Business records are limited to the employee's own shop.
       match /{collection}/{docId} {
-        allow read, delete: if collection in ['items', 'stockin', 'sales', 'tx', 'exp']
+        allow read: if collection in ['items', 'stockin', 'sales', 'tx', 'exp']
           && inMyShop(teamId, recordShop(resource.data));
+        allow delete: if collection in ['items', 'stockin', 'sales', 'tx', 'exp']
+          && admin(teamId);
         allow create, update: if collection in ['items', 'stockin', 'sales', 'tx', 'exp']
           && inMyShop(teamId, recordShop(request.resource.data));
         // Legacy 'users' collection: administrators only.
