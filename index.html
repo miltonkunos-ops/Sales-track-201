@@ -117,6 +117,11 @@ pre{font:13px/1.35 ui-monospace,Menlo,Consolas,monospace;white-space:pre;overflo
 <label for="spay">Payment</label>
 <select id="spay"><option value="cash">Cash</option><option value="credit">On credit</option><option value="change">Use customer’s change</option></select>
 <div id="sbal" class="sub" style="margin-top:6px"></div>
+<div id="cashbox">
+<label for="stend">Cash received ($)</label><input id="stend" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Leave empty if exact">
+<div id="schg" style="font-size:18px;font-weight:700;margin-top:8px"></div>
+<label id="keeplbl" class="hide" style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" id="skeep" style="width:auto"> Customer leaves the change with us (add to their account)</label>
+</div>
 <button class="go" id="sdone">Complete sale & print</button>
 <div class="msg" id="smsg"></div>
 </div>
@@ -432,6 +437,11 @@ function render(){
     return '<div class="row"><div><b>'+esc(i.name)+'</b><div class="sub">'+money(i.price)+' · <span class="'+(st<=lo?'low':'')+'">'+st+' in stock</span></div></div><div class="qty"><button data-m="'+esc(i.id)+'">−</button><span>'+(cart[i.id]||0)+'</span><button data-p="'+esc(i.id)+'">+</button></div></div>'}).join(""):'<div class="sub" style="margin-top:10px">No items available.</div>';
   $("stot").textContent=money(cartTotal());
   var sc=m[key($("scust").value)];$("sbal").textContent=sc?("Change "+money(sc.chg)+" · owes "+money(sc.cr)):"";
+  var isCash=$("spay").value==="cash";$("cashbox").classList.toggle("hide",!isCash);
+  if(isCash){var tv0=parseFloat($("stend").value),tot0=cartTotal(),ch0=0;
+    if(tot0>0&&tv0>=0){if(tv0+0.004>=tot0){ch0=Math.round((tv0-tot0)*100)/100;$("schg").className="chg";$("schg").textContent="Change to give: "+money(ch0)}else{$("schg").className="cr";$("schg").textContent="Short by "+money(tot0-tv0)}}
+    else{$("schg").className="";$("schg").textContent=""}
+    $("keeplbl").classList.toggle("hide",!(ch0>0.004&&key($("scust").value)));}
   
   var low=0,td=0,t0=new Date();t0.setHours(0,0,0,0);
   sarr("sales").forEach(function(s){if(s.ts>=t0.getTime())td+=s.total});
@@ -505,7 +515,7 @@ function doLogout(){
 $("drawerLogout").onclick = doLogout;
 $("roleBtn").onclick = doLogout;
 
-["sq","scust","name","q"].forEach(function(i){if($(i))$(i).oninput=render});$("spay").onchange=render;if($("per"))$("per").onchange=render;
+["sq","scust","name","q","stend"].forEach(function(i){if($(i))$(i).oninput=render});$("spay").onchange=render;if($("per"))$("per").onchange=render;
 
 $("xsave").onclick=function(){if(!requireAdmin("Only an administrator can record expenses."))return;var t=$("xt").value.trim(),a=parseFloat($("xa").value);
   if(!t)return say("xmsg","Enter expense description.",true);
@@ -532,11 +542,20 @@ $("sdone").onclick=function(){
   }
   var id=rid(),now=Date.now(),names=lines.map(function(l){return l.qty+" × "+l.name}).join(", "),tt=Math.round(total*100)/100;
   var cg=0,uk=false;lines.forEach(function(l){if(l.cost==null)uk=true;else cg+=l.qty*l.cost});
+  var tend=null,chgAmt=0,kept=false;
+  if(pay==="cash"&&$("stend").value.trim()!==""){
+    var tv=parseFloat($("stend").value);
+    if(!(tv>=0))return say("smsg","Enter a valid cash amount.",true);
+    if(tv+0.004<tt)return say("smsg","Cash received is less than the total ("+money(tt)+").",true);
+    tend=Math.round(tv*100)/100;chgAmt=Math.round((tend-tt)*100)/100;if(chgAmt<0.005)chgAmt=0;
+    kept=!!$("skeep").checked&&chgAmt>0&&!!cust;
+  }
   
-  put("sales",id,{lines:lines,total:tt,cogs:Math.round(cg*100)/100,unk:uk,pay:pay,cust:cust,by:S.me,ts:now},"Sale Complete",names+" for "+money(tt));
+  put("sales",id,{lines:lines,total:tt,cogs:Math.round(cg*100)/100,unk:uk,pay:pay,cust:cust,tend:tend,chg:chgAmt,kept:kept,by:S.me,ts:now},"Sale Complete",names+" for "+money(tt));
   if(pay==="credit"||pay==="change")put("tx","x"+id,{cust:cust,type:pay==="credit"?"credit":"buy_change",amt:tt,item:names,by:S.me,ts:now},"Ledger Entry",pay+" for customer "+cust);
   
-  cart={};
+  if(kept)put("tx","c"+id,{cust:cust,type:"change",amt:chgAmt,item:"Change left from sale",by:S.me,ts:now},"Ledger Entry","change of "+money(chgAmt)+" kept for "+cust);
+  cart={};$("stend").value="";$("skeep").checked=false;
   if(S.set.auto){curRcpt=receiptText(S.sales[id]);printRaw(curRcpt);say("smsg","Sale saved & sent to printer.")}
   else{showReceipt(S.sales[id]);say("smsg","Sale saved & receipt opened.")}
   render();
@@ -562,7 +581,7 @@ $("tlist").onclick=function(e){var d=e.target.dataset;if((d.pr||d.pc||d.di)&&!re
   if(d.di){var remaining=stockOf(d.di),used=arr("sales").some(function(s){return (s.lines||[]).some(function(l){return l.item===d.di})});if(remaining>0||used){alert("This item has stock or sales history, so it cannot be removed one by one. To wipe test data, use People & Audit > Clear test data.");return}if(confirm("Remove item?")){drop("items",d.di,"Item Removed","ID: "+d.di);render()}}};
 
 $("hsales").onclick=function(e){if(e.target.dataset.rs){var rs=S.sales[e.target.dataset.rs];if(rs)showReceipt(rs);return}var id=e.target.dataset.ds;if(!id)return;if(!requireAdmin("Only an administrator can delete sales."))return;if(!confirm("Delete sale?"))return;
-  drop("sales",id,"Sale Deleted","ID: "+id);drop("tx","x"+id);render()};
+  drop("sales",id,"Sale Deleted","ID: "+id);if(S.tx["x"+id])drop("tx","x"+id);if(S.tx["c"+id])drop("tx","c"+id);render()};
 
 $("hlist").onclick=function(e){var id=e.target.dataset.dt;if(id&&!requireAdmin("Only an administrator can delete ledger entries."))return;if(id&&confirm("Delete entry?")){drop("tx",id,"Ledger Entry Deleted","ID: "+id);render()}};
 $("clist").onclick=function(e){var r=e.target.closest(".row");if(!r)return;$("name").value=(balances()[r.dataset.k]||{}).name||"";render()};
@@ -591,6 +610,7 @@ function receiptText(s){
   (s.lines||[]).forEach(function(l){o.push(padLR(l.qty+" x "+l.name,money(l.qty*l.price),w))});
   o.push(ln);o.push(padLR("TOTAL",money(s.total),w));
   o.push("Paid: "+({cash:"Cash",credit:"On credit",change:"From change"}[s.pay]||s.pay));
+  if(s.pay==="cash"&&typeof s.tend==="number"){o.push(padLR("Cash received",money(s.tend),w));if(s.chg>0.004)o.push(padLR(s.kept?"Change on account":"Change",money(s.chg),w))}
   o.push(ln);o.push(ctr(S.set.foot||"Thank you!",w));
   return ascii(o.join("\n"))}
 function showReceipt(s){curRcpt=receiptText(s);$("rtxt").textContent=curRcpt;$("rmsg").textContent="";$("rcpt").classList.remove("hide")}
