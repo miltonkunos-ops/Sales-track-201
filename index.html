@@ -69,6 +69,7 @@ pre{font:13px/1.35 ui-monospace,Menlo,Consolas,monospace;white-space:pre;overflo
     <h1>Sales Track PWA</h1>
   </div>
   <div style="display:flex;gap:6px;align-items:center">
+    <select id="shopSel" class="hide" style="max-width:130px;padding:6px;font-size:13px"></select>
     <button class="icon-btn" id="refreshBtn" title="Refresh">🔄</button>
     <button class="role" id="roleBtn">Login</button>
   </div>
@@ -200,8 +201,27 @@ pre{font:13px/1.35 ui-monospace,Menlo,Consolas,monospace;white-space:pre;overflo
   <option value="Employee">Employee</option>
   <option value="Administrator">Administrator</option>
 </select>
+<label for="rshop">Shop (employees only see this shop)</label>
+<select id="rshop"></select>
 <button class="go" id="regGo">Add Team Member</button>
 <div class="msg" id="regMsg"></div>
+</div>
+
+<div class="card" id="admin-shops" style="display:none">
+<h2>Shops</h2>
+<div class="sub" style="margin-bottom:8px">Add shops and choose which shop each employee works in. Employees only see their own shop.</div>
+<div id="shoplist"></div>
+<label for="shopname">New shop name</label><input id="shopname" placeholder="e.g. Epworth branch">
+<button class="go" id="shopAdd">Add shop</button>
+<div class="msg" id="shopMsg"></div>
+</div>
+
+<div class="card" id="admin-clear" style="display:none">
+<h2>Clear test data</h2>
+<div class="sub" style="margin-bottom:8px">Deletes ALL items, stock, sales, ledger entries and expenses of the shop you are currently viewing, on every device. Team members and shops are kept. This cannot be undone, so download a backup first.</div>
+<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="clrAudit" style="width:auto"> Also clear this shop's audit log</label>
+<button class="go" id="clrGo" style="background:#b3261e">Clear this shop's data</button>
+<div class="msg" id="clrMsg"></div>
 </div>
 
 <h2>Team Members</h2>
@@ -282,12 +302,13 @@ var DEFAULT_FIREBASE_CONFIG = {
 };
 if(!window.SALES_TRACK_FIREBASE_CONFIG||!window.SALES_TRACK_FIREBASE_CONFIG.apiKey||/YOUR_/.test(window.SALES_TRACK_FIREBASE_CONFIG.apiKey+window.SALES_TRACK_FIREBASE_CONFIG.projectId)){window.SALES_TRACK_FIREBASE_CONFIG=DEFAULT_FIREBASE_CONFIG;}
 
-var SK="salestrack_v3",COLS=["items","stockin","sales","tx","exp","audit","users"],SYNC_COLS=["items","stockin","sales","tx","exp","audit"];
+var SK="salestrack_v3",COLS=["items","stockin","sales","tx","exp","audit","users"],SYNC_COLS=["items","stockin","sales","tx","exp","audit"],SHOP_COLS=["items","stockin","sales","tx","exp","audit"];
 var S={
   items:{},stockin:{},sales:{},tx:{},exp:{},audit:{},users:{},del:{},
   me:"",role:"",userKey:"",lastImp:0,lastSent:0,
   set:{biz:"Sales Track Point",pw:32,foot:"Thank you!"},
   dirty:[],
+  shop:"main",
   live:null,
   seeded:false
 };
@@ -318,14 +339,23 @@ function arr(c){return Object.keys(S[c]||{}).map(function(id){return Object.assi
 
 function logAudit(action, details){
   var id=rid();
-  var entry={action:action, details:details, by:S.me||"Unknown", role:S.role||"Employee", ts:Date.now()};
+  var entry={action:action, details:details, by:S.me||"Unknown", role:S.role||"Employee", ts:Date.now(), shop:curShop()};
   S.audit[id]=entry;
   mark("audit/"+id);
   save();
   push();
 }
 
+var shopList=[{id:"main",name:"Main shop"}];
+function curShop(){return S.shop||"main"}
+function shopName(id){var f=shopList.filter(function(x){return x.id===id})[0];return f?f.name:id}
+function inShop(r){return (r.shop||"main")===curShop()}
+function sarr(c){return arr(c).filter(inShop)}
+var viewAll=false;
+function allShops(){return S.role==="Administrator"&&viewAll}
+function pArr(c){return allShops()?arr(c):sarr(c)}
 function put(c,id,d, auditAction, auditDesc){
+  if(SHOP_COLS.indexOf(c)>-1&&!d.shop)d.shop=curShop();
   S[c][id]=d;
   mark(c+"/"+id);
   save();
@@ -344,9 +374,9 @@ function drop(c,id, auditAction, auditDesc){
 
 function stockOf(id){var n=0;arr("stockin").forEach(function(s){if(s.item===id)n+=s.qty});
   arr("sales").forEach(function(s){(s.lines||[]).forEach(function(l){if(l.item===id)n-=l.qty})});return n}
-function balances(){var m={};arr("tx").forEach(function(t){var k=key(t.cust),c=m[k]||(m[k]={name:String(t.cust).trim(),chg:0,cr:0});
+function balances(){var m={};sarr("tx").forEach(function(t){var k=key(t.cust),c=m[k]||(m[k]={name:String(t.cust).trim(),chg:0,cr:0});
   if(t.type==="change")c.chg+=t.amt;else if(t.type==="buy_change")c.chg-=t.amt;else if(t.type==="credit")c.cr+=t.amt;else if(t.type==="pay")c.cr-=t.amt});return m}
-function cartTotal(){var t=0;arr("items").forEach(function(i){t+=(cart[i.id]||0)*i.price});return t}
+function cartTotal(){var t=0;sarr("items").forEach(function(i){t+=(cart[i.id]||0)*i.price});return t}
 var LABEL={change:"Change left",credit:"Credit taken",buy_change:"Bought with change",pay:"Part payment"};
 function when(ts){return new Date(ts).toLocaleString()}
 
@@ -357,7 +387,7 @@ function checkAuthShell(){
 }
 function setCloudIdentity(user,member,teamId){
   cloudUser=user;cloudMember=member;S.me=member.name||user.email||"User";S.role=member.role||"Employee";S.userKey=user.uid;
-  S.live={t:teamId};localStorage.setItem("salestrack_team_id",teamId);save();$("workspaceLabel").textContent=teamId;checkAuthShell();connect();startTeamWatch();
+  S.live={t:teamId};localStorage.setItem("salestrack_team_id",teamId);save();$("workspaceLabel").textContent=teamId;checkAuthShell();connect();startTeamWatch();startShopWatch();
 }
 function firebaseReady(){return !!(window.firebase && window.SALES_TRACK_FIREBASE_CONFIG && window.SALES_TRACK_FIREBASE_CONFIG.apiKey && window.SALES_TRACK_FIREBASE_CONFIG.projectId)}
 function ensureFirebase(){
@@ -385,62 +415,64 @@ function render(){
   var isAdmin = S.role === "Administrator";
   $("roleBtn").textContent = (S.me || "User") + " (" + S.role + ")";
   $("warn").classList.toggle("hide",!memOnly);
-
+  
   if($("nav-pro")) $("nav-pro").style.display = isAdmin ? "block" : "none";
   if($("nav-audit")) $("nav-audit").style.display = isAdmin ? "block" : "none";
   if($("admin-stock-card")) $("admin-stock-card").style.display = isAdmin ? "block" : "none";
   if($("admin-user-reg")) $("admin-user-reg").style.display = isAdmin ? "block" : "none";
+  if($("admin-shops")) $("admin-shops").style.display = isAdmin ? "block" : "none";
+  if($("admin-clear")) $("admin-clear").style.display = isAdmin ? "block" : "none";
 
-  var items=arr("items"),m=balances(),keys=Object.keys(m).sort();
+  var items=sarr("items"),m=balances(),keys=Object.keys(m).sort();
   $("names").innerHTML=keys.map(function(k){return '<option value="'+esc(m[k].name)+'">'}).join("");
   var sq=key($("sq").value),sl=items.filter(function(i){return !sq||key(i.name).indexOf(sq)>-1}).sort(function(a,b){return a.name.localeCompare(b.name)});
-
+  
   $("slist").innerHTML=sl.length?sl.map(function(i){var st=stockOf(i.id),lo=i.low==null?5:i.low;
     return '<div class="row"><div><b>'+esc(i.name)+'</b><div class="sub">'+money(i.price)+' · <span class="'+(st<=lo?'low':'')+'">'+st+' in stock</span></div></div><div class="qty"><button data-m="'+esc(i.id)+'">−</button><span>'+(cart[i.id]||0)+'</span><button data-p="'+esc(i.id)+'">+</button></div></div>'}).join(""):'<div class="sub" style="margin-top:10px">No items available.</div>';
   $("stot").textContent=money(cartTotal());
   var sc=m[key($("scust").value)];$("sbal").textContent=sc?("Change "+money(sc.chg)+" · owes "+money(sc.cr)):"";
-
+  
   var low=0,td=0,t0=new Date();t0.setHours(0,0,0,0);
-  arr("sales").forEach(function(s){if(s.ts>=t0.getTime())td+=s.total});
-
+  sarr("sales").forEach(function(s){if(s.ts>=t0.getTime())td+=s.total});
+  
   $("tlist").innerHTML=items.length?items.map(function(i){var st=stockOf(i.id),lo=i.low==null?5:i.low;if(st<=lo)low++;
     return '<div class="row"><div><b>'+esc(i.name)+'</b><div class="sub">'+money(i.price)+(typeof i.cost==="number"?' · cost '+money(i.cost):'')+'</div></div><div style="text-align:right"><span class="'+(st<=lo?'low':'')+'">'+st+' left</span>'+(isAdmin?'<div><button class="lnk" data-pr="'+esc(i.id)+'">Price</button><button class="lnk" data-pc="'+esc(i.id)+'">Cost</button><button class="del" data-di="'+esc(i.id)+'">Remove</button></div>':'')+'</div></div>'}).join(""):'<div class="sub">No items yet.</div>';
   $("today").textContent=money(td);$("lowc").textContent=low;
-
+  
   var cur=$("isel").value;$("isel").innerHTML=items.map(function(i){return '<option value="'+esc(i.id)+'">'+esc(i.name)+'</option>'}).join("");if(cur)$("isel").value=cur;
   var tc=0,tr=0;keys.forEach(function(k){tc+=m[k].chg;tr+=m[k].cr});
   $("tchg").textContent=money(tc);$("tcr").textContent=money(tr);
-
+  
   var q=key($("q").value);
   var rows=keys.filter(function(k){return !q||k.indexOf(q)>-1}).map(function(k){var c=m[k];
     return '<div class="row" data-k="'+esc(k)+'"><b>'+esc(c.name)+'</b><div style="text-align:right">'+(Math.abs(c.chg)>0.004?'<div class="chg">Change '+money(c.chg)+'</div>':'')+(Math.abs(c.cr)>0.004?'<div class="cr">Owes '+money(c.cr)+'</div>':'')+'</div></div>'});
   $("clist").innerHTML=rows.length?rows.join(""):'<div class="sub">No customers yet.</div>';
-
-  var hs=arr("sales").sort(function(a,b){return b.ts-a.ts}).slice(0,100);
+  
+  var hs=sarr("sales").sort(function(a,b){return b.ts-a.ts}).slice(0,100);
   $("hsales").innerHTML=hs.length?hs.map(function(s){
     return '<div class="row"><div><b>'+money(s.total)+'</b> <span class="sub">· '+esc(s.pay)+(s.cust?' · '+esc(s.cust):'')+' · by '+esc(s.by)+'</span><div class="sub">'+when(s.ts)+'<br>'+(s.lines||[]).map(function(l){return esc(l.qty+" × "+l.name)}).join(", ")+'</div></div><div><button class="lnk" data-rs="'+esc(s.id)+'">Receipt</button>'+(isAdmin?'<button class="del" data-ds="'+esc(s.id)+'">Delete</button>':'')+'</div></div>'}).join(""):'<div class="sub">No sales yet.</div>';
-
-  var h=arr("tx").sort(function(a,b){return b.ts-a.ts}).slice(0,100);
+  
+  var h=sarr("tx").sort(function(a,b){return b.ts-a.ts}).slice(0,100);
   $("hlist").innerHTML=h.length?h.map(function(t){
     return '<div class="row"><div><b>'+esc(t.cust)+'</b> <span class="sub">· '+esc(LABEL[t.type]||t.type)+' · by '+esc(t.by)+'</span><div class="sub">'+when(t.ts)+'</div></div><div style="text-align:right"><div class="'+(t.type==="change"||t.type==="pay"?'chg':'cr')+'">'+money(t.amt)+'</div>'+(isAdmin?'<button class="del" data-dt="'+esc(t.id)+'">Delete</button>':'')+'</div></div>'}).join(""):'<div class="sub">No entries yet.</div>';
 
   renderTeam();
 
-  var aud=arr("audit").sort(function(a,b){return b.ts-a.ts}).slice(0,100);
+  var aud=arr("audit").filter(function(a){return (S.role==="Administrator")&&(allShops()||inShop(a))}).sort(function(a,b){return b.ts-a.ts}).slice(0,100);
   $("alist").innerHTML=aud.length?aud.map(function(a){
     return '<div class="row"><div><b>'+esc(a.action)+'</b><div class="sub">'+esc(a.details)+'</div><div class="sub">By: <b>'+esc(a.by)+'</b> ('+esc(a.role)+')</div></div><div class="sub">'+when(a.ts)+'</div></div>'}).join(""):'<div class="sub">No audit records yet.</div>';
 
   if(isAdmin){
     var P0=since($("per").value),rv=0,cg=0,uk=0,ex=0,cv=0,rt=0;
-    arr("sales").forEach(function(s){if(s.ts>=P0){rv+=s.total;cg+=s.cogs||0;if(s.unk!==false)uk++}});
-    arr("exp").forEach(function(x){if(x.ts>=P0)ex+=x.amount});
+    pArr("sales").forEach(function(s){if(s.ts>=P0){rv+=s.total;cg+=s.cogs||0;if(s.unk!==false)uk++}});
+    pArr("exp").forEach(function(x){if(x.ts>=P0)ex+=x.amount});
     items.forEach(function(i){var q=stockOf(i.id);cv+=q*(typeof i.cost==="number"?i.cost:0);rt+=q*i.price});
     var nt=rv-cg-ex;
     $("pRev").textContent=money(rv);$("pCogs").textContent=money(cg);$("pGross").textContent=money(rv-cg);$("pExp").textContent=money(ex);
     $("pNet").textContent=money(nt);$("pNet").className=nt<0?"cr":"chg";
     $("pUnk").textContent=uk?(uk+" sales have no cost price."):"";
     $("pSc").textContent=money(cv);$("pSr").textContent=money(rt);
-    var xs=arr("exp").sort(function(a,b){return b.ts-a.ts}).slice(0,100);
+    var xs=pArr("exp").sort(function(a,b){return b.ts-a.ts}).slice(0,100);
     $("xlist").innerHTML=xs.length?xs.map(function(x){return '<div class="row"><div><b>'+esc(x.title)+'</b> <span class="sub">· '+esc(x.category)+' · by '+esc(x.by)+'</span><div class="sub">'+when(x.ts)+'</div></div><div style="text-align:right"><div class="cr">'+money(x.amount)+'</div><button class="del" data-dx="'+esc(x.id)+'">Delete</button></div></div>'}).join(""):'<div class="sub">No expenses.</div>';
   }
 }
@@ -464,7 +496,7 @@ $("drawer").onclick=function(e){if(e.target===this)$("drawer").classList.add("hi
 $("refreshBtn").onclick=function(){render();location.reload();};
 
 function doLogout(){
-  stopTeamWatch();unsubs.forEach(function(fn){try{fn()}catch(e){}});unsubs=[];fs=null;cloudUser=null;cloudMember=null;
+  stopTeamWatch();stopShopWatch();unsubs.forEach(function(fn){try{fn()}catch(e){}});unsubs=[];fs=null;cloudUser=null;cloudMember=null;
   if(window.firebase&&firebase.auth)firebase.auth().signOut().catch(function(){});
   S.userKey="";S.me="";S.role="";S.live=null;save();$("drawer").classList.add("hide");checkAuthShell();
 }
@@ -482,13 +514,13 @@ $("xsave").onclick=function(){if(!requireAdmin("Only an administrator can record
   $("xt").value="";$("xa").value="";say("xmsg","Expense saved.");render()};
 $("xlist").onclick=function(e){var id=e.target.dataset.dx;if(id&&!requireAdmin("Only an administrator can delete expenses."))return;if(id&&confirm("Delete expense?")){drop("exp",id,"Expense Deleted","ID: "+id);render()}};
 
-$("slist").onclick=function(e){var d=e.target.dataset,items=arr("items");
+$("slist").onclick=function(e){var d=e.target.dataset,items=sarr("items");
   if(d.p){var i=items.filter(function(x){return x.id===d.p})[0];if(!i)return;
     if((cart[d.p]||0)>=stockOf(d.p))return say("smsg","Only "+stockOf(d.p)+" left.",true);cart[d.p]=(cart[d.p]||0)+1;say("smsg","")}
   else if(d.m){cart[d.m]=Math.max(0,(cart[d.m]||0)-1)}else return;render()};
 
 $("sdone").onclick=function(){
-  var lines=[];arr("items").forEach(function(i){if(cart[i.id])lines.push({item:i.id,name:i.name,qty:cart[i.id],price:i.price,cost:typeof i.cost==="number"?i.cost:null})});
+  var lines=[];sarr("items").forEach(function(i){if(cart[i.id])lines.push({item:i.id,name:i.name,qty:cart[i.id],price:i.price,cost:typeof i.cost==="number"?i.cost:null})});
   if(!lines.length)return say("smsg","Add at least one item.",true);
   var pay=$("spay").value,cust=$("scust").value.trim(),total=cartTotal();
   if(pay!=="cash"&&!cust)return say("smsg","Enter customer name for credit/change.",true);
@@ -499,10 +531,10 @@ $("sdone").onclick=function(){
   }
   var id=rid(),now=Date.now(),names=lines.map(function(l){return l.qty+" × "+l.name}).join(", "),tt=Math.round(total*100)/100;
   var cg=0,uk=false;lines.forEach(function(l){if(l.cost==null)uk=true;else cg+=l.qty*l.cost});
-
+  
   put("sales",id,{lines:lines,total:tt,cogs:Math.round(cg*100)/100,unk:uk,pay:pay,cust:cust,by:S.me,ts:now},"Sale Complete",names+" for "+money(tt));
   if(pay==="credit"||pay==="change")put("tx","x"+id,{cust:cust,type:pay==="credit"?"credit":"buy_change",amt:tt,item:names,by:S.me,ts:now},"Ledger Entry",pay+" for customer "+cust);
-
+  
   cart={};
   showReceipt(S.sales[id]);
   say("smsg","Sale saved & receipt opened.");
@@ -526,7 +558,7 @@ $("tlist").onclick=function(e){var d=e.target.dataset;if((d.pr||d.pc||d.di)&&!re
     if(v!==null&&parseFloat(v)>=0){i.price=Math.round(parseFloat(v)*100)/100;i.upd=Date.now();mark("items/"+d.pr);save();push();logAudit("Price Updated",i.name+" changed to "+money(i.price));render()}}
   if(d.pc){var j=S.items[d.pc];if(!j)return;var cv0=prompt("Cost price for "+j.name,typeof j.cost==="number"?j.cost:"");
     if(cv0!==null&&parseFloat(cv0)>=0){j.cost=Math.round(parseFloat(cv0)*100)/100;j.upd=Date.now();mark("items/"+d.pc);save();push();logAudit("Cost Updated",j.name+" cost set to "+money(j.cost));render()}}
-  if(d.di){var remaining=stockOf(d.di),used=arr("sales").some(function(s){return (s.lines||[]).some(function(l){return l.item===d.di})});if(remaining>0||used){alert("This item has stock or sales history. Keep it for accurate records; set its stock to zero instead.");return}if(confirm("Remove item?")){drop("items",d.di,"Item Removed","ID: "+d.di);render()}}};
+  if(d.di){var remaining=stockOf(d.di),used=arr("sales").some(function(s){return (s.lines||[]).some(function(l){return l.item===d.di})});if(remaining>0||used){alert("This item has stock or sales history, so it cannot be removed one by one. To wipe test data, use People & Audit > Clear test data.");return}if(confirm("Remove item?")){drop("items",d.di,"Item Removed","ID: "+d.di);render()}}};
 
 $("hsales").onclick=function(e){if(e.target.dataset.rs){var rs=S.sales[e.target.dataset.rs];if(rs)showReceipt(rs);return}var id=e.target.dataset.ds;if(!id)return;if(!requireAdmin("Only an administrator can delete sales."))return;if(!confirm("Delete sale?"))return;
   drop("sales",id,"Sale Deleted","ID: "+id);drop("tx","x"+id);render()};
@@ -546,7 +578,7 @@ $("save").onclick=function(){
 
 /* ---- receipts ---- */
 var curRcpt="";
-function ascii(t){return String(t).replace(/[   ]/g," ").replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/×/g,"x").replace(/[–—]/g,"-").replace(/[^\x20-\x7E\n]/g,"?")}
+function ascii(t){return String(t).replace(/[\u00a0\u2007\u202f]/g," ").replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/×/g,"x").replace(/[–—]/g,"-").replace(/[^\x20-\x7E\n]/g,"?")}
 function padLR(l,r,w){l=ascii(l);r=ascii(r);if(l.length+r.length+1>w)l=l.slice(0,Math.max(1,w-r.length-1));return l+Array(w-l.length-r.length+1).join(" ")+r}
 function ctr(t,w){t=ascii(t).slice(0,w);return Array(Math.floor((w-t.length)/2)+1).join(" ")+t}
 function receiptText(s){
@@ -587,6 +619,61 @@ $("copy").onclick=function(){navigator.clipboard.writeText(pack());say("smsg2","
 $("file").onchange=function(){var f=this.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var n=mergeIn(r.result);if(n<0)return say("smsg2","That backup file is invalid or incomplete.",true);say("smsg2","Imported "+n+" new records. Existing records were kept.");render()};r.readAsText(f)};
 $("imp").onclick=function(){var n=mergeIn($("paste").value.trim());if(n<0)return say("smsg2","That backup text is invalid or incomplete.",true);say("smsg2","Imported "+n+" new records. Existing records were kept.");render()};
 
+/* ---- clear test data (admin) ---- */
+$("clrGo").onclick=function(){
+  if(S.role!=="Administrator")return say("clrMsg","Only administrators can clear data.",true);
+  if(viewAll)return say("clrMsg","Pick one shop in the top menu first (not All shops).",true);
+  var cols=["items","stockin","sales","tx","exp"];if($("clrAudit").checked)cols.push("audit");
+  var total=0;cols.forEach(function(c){total+=sarr(c).length});
+  if(!total)return say("clrMsg","This shop has no data to clear.");
+  var t=prompt("This will permanently delete "+total+" records from \""+shopName(curShop())+"\" on all devices.\nType DELETE to confirm.");
+  if(t!=="DELETE")return say("clrMsg","Cancelled. Nothing was deleted.");
+  cols.forEach(function(c){sarr(c).forEach(function(r){delete S[c][r.id];S.del[c+"/"+r.id]=Date.now();mark("d:"+c+"/"+r.id)})});
+  cart={};save();push();
+  logAudit("Test Data Cleared",total+" records removed from "+shopName(curShop()));
+  say("clrMsg","Cleared "+total+" records.");render();
+};
+
+/* ---- multiple shops ---- */
+var shopUnsub=null,myShops=[];
+function myShopIds(){
+  if(S.role==="Administrator")return shopList.map(function(x){return x.id});
+  var m=cloudMember&&cloudMember.shops;return (m&&m.length)?m:["main"];
+}
+function renderShops(){
+  var sel=$("shopSel"),admin=S.role==="Administrator";
+  var ids=myShopIds(),opts=shopList.filter(function(x){return ids.indexOf(x.id)>-1});
+  if(!opts.length)opts=[{id:"main",name:"Main shop"}];
+  if(!opts.some(function(x){return x.id===S.shop}))S.shop=opts[0].id;
+  var html=opts.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>'}).join("");
+  if(admin&&opts.length>1)html+='<option value="__all">All shops</option>';
+  if(sel){sel.innerHTML=html;sel.value=(admin&&viewAll)?"__all":S.shop;sel.classList.toggle("hide",!(admin||opts.length>1));}
+  var rs=$("rshop");if(rs){var cur=rs.value;rs.innerHTML=shopList.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>'}).join("");if(cur)rs.value=cur}
+  var sl=$("shoplist");if(sl)sl.innerHTML=shopList.map(function(x){return '<div class="row"><b>'+esc(x.name)+'</b><span class="sub">'+(x.id===S.shop?'viewing now':'')+'</span></div>'}).join("");
+}
+function startShopWatch(){
+  if(shopUnsub||!cloudUser||!S.live)return;
+  try{shopUnsub=firebase.firestore().collection("teams").doc(S.live.t).collection("shops").onSnapshot(function(sn){
+    var l=sn.docs.map(function(d){var x=d.data();return {id:d.id,name:x.name||d.id}}).sort(function(a,b){return a.name.localeCompare(b.name)});
+    if(!l.some(function(x){return x.id==="main"}))l.unshift({id:"main",name:"Main shop"});
+    shopList=l;renderShops();render();
+  },function(){shopList=[{id:"main",name:"Main shop"}];renderShops()})}catch(e){}
+}
+function stopShopWatch(){if(shopUnsub){shopUnsub();shopUnsub=null}shopList=[{id:"main",name:"Main shop"}];viewAll=false}
+$("shopSel").onchange=function(){
+  if(this.value==="__all"){viewAll=true}else{viewAll=false;S.shop=this.value;save()}
+  cart={};render();
+};
+$("shopAdd").onclick=async function(){
+  var name=$("shopname").value.trim();
+  if(S.role!=="Administrator"||!S.live)return say("shopMsg","Only administrators can add shops.",true);
+  if(!name)return say("shopMsg","Enter a shop name.",true);
+  var id="s"+Date.now().toString(36);
+  try{await firebase.firestore().collection("teams").doc(S.live.t).collection("shops").doc(id).set({name:name,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    $("shopname").value="";say("shopMsg",name+" added.");
+  }catch(e){say("shopMsg",friendlyAuthError(e),true)}
+};
+
 /* ---- team management (cloud) ---- */
 var teamList=[],teamUnsub=null;
 function renderTeam(){
@@ -596,7 +683,7 @@ function renderTeam(){
   var admin=S.role==="Administrator";
   el.innerHTML=teamList.map(function(m){
     var me=m.uid===cloudUser.uid,on=m.active!==false;
-    return '<div class="row"><div><b>'+esc(m.name||"")+'</b>'+(me?' <span class="sub">(you)</span>':'')+'<div class="sub">'+esc(m.email||"")+'</div><div class="sub">'+esc(m.role||"Employee")+' · '+(on?'Active':'<span class="low">Disabled</span>')+'</div></div>'+
+    return '<div class="row"><div><b>'+esc(m.name||"")+'</b>'+(me?' <span class="sub">(you)</span>':'')+'<div class="sub">'+esc(m.email||"")+'</div><div class="sub">'+esc(m.role||"Employee")+(m.role==="Administrator"?' · all shops':' · '+esc(shopName((m.shops&&m.shops[0])||"main")))+' · '+(on?'Active':'<span class="low">Disabled</span>')+'</div></div>'+
     (admin&&!me?'<div style="text-align:right"><button class="del" data-tog="'+esc(m.uid)+'">'+(on?'Disable':'Enable')+'</button> <button class="del" data-role="'+esc(m.uid)+'">Make '+(m.role==="Administrator"?'Employee':'Admin')+'</button></div>':'')+'</div>'}).join("");
 }
 function startTeamWatch(){
@@ -627,7 +714,7 @@ $("regGo").onclick=async function(){
     secondary=firebase.initializeApp(window.SALES_TRACK_FIREBASE_CONFIG,"staffcreate"+Date.now());
     var cred=await secondary.auth().createUserWithEmailAndPassword(email,pass);
     var uid=cred.user.uid;
-    await firebase.firestore().collection("teams").doc(S.live.t).collection("members").doc(uid).set({uid:uid,email:email,name:name,role:role,active:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    await firebase.firestore().collection("teams").doc(S.live.t).collection("members").doc(uid).set({uid:uid,email:email,name:name,role:role,shops:(role==="Administrator"?[]:[$("rshop").value||"main"]),active:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
     await secondary.auth().signOut();
     $("rname").value="";$("ruser").value="";$("rpass").value="";$("rrole").value="Employee";
     say("regMsg",name+" added. Share: email "+email+", the temporary password, and workspace ID "+S.live.t+".");
@@ -660,8 +747,14 @@ function lvStatus(s){if($("lvst"))$("lvst").textContent=s}
 function connect(){
   if(!S.live||!cloudUser||fs)return;
   try{fs=firebase.firestore();var team=fs.collection("teams").doc(S.live.t);lvStatus("Connecting securely to workspace…");
-    SYNC_COLS.forEach(function(c){unsubs.push(team.collection(c).onSnapshot(function(sn){var changed=false;sn.docChanges().forEach(function(ch){var id=ch.doc.id;if(ch.type==="removed"){if(S[c][id]){delete S[c][id];changed=true}return;}var data=ch.doc.data();if(JSON.stringify(S[c][id])!==JSON.stringify(data)){S[c][id]=data;changed=true;}});if(changed){save();render();}lvStatus("Connected · cloud changes are synchronising across devices.");},function(e){lvStatus("Cloud sync error: "+(e.code||"permission-denied")+". Check Firestore rules and workspace membership.")}));});
+    var __admin=S.role==="Administrator",__ids=myShopIds();
+    SYNC_COLS.forEach(function(c){
+      if(c==="audit"&&!__admin)return;
+      var __q=team.collection(c);
+      if(!__admin){__q=__q.where("shop","in",__ids.slice(0,10))}
+      unsubs.push(__q.onSnapshot(function(sn){var changed=false;sn.docChanges().forEach(function(ch){var id=ch.doc.id;if(ch.type==="removed"){if(S[c][id]){delete S[c][id];changed=true}return;}var data=ch.doc.data();if(JSON.stringify(S[c][id])!==JSON.stringify(data)){S[c][id]=data;changed=true;}});if(changed){save();render();}lvStatus("Connected · cloud changes are synchronising across devices.");},function(e){lvStatus("Cloud sync error: "+(e.code||"permission-denied")+". Check Firestore rules and workspace membership.")}));});
     unsubs.push(team.onSnapshot(function(doc){if(!doc.exists){lvStatus("Workspace not found.");return;}},function(){lvStatus("Cannot read workspace. Check access rules.")}));
+    SHOP_COLS.forEach(function(c){Object.keys(S[c]||{}).forEach(function(id){if(!S[c][id].shop){S[c][id].shop="main";mark(c+"/"+id)}})});save();
     if(!S.seeded){SYNC_COLS.forEach(function(c){Object.keys(S[c]||{}).forEach(function(id){mark(c+"/"+id)})});S.seeded=true;save();}
     push();
   }catch(e){fs=null;lvStatus("Could not start cloud sync: "+e.message)}
