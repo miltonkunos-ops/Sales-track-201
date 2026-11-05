@@ -15,16 +15,15 @@ service cloud.firestore {
     function admin(teamId) {
       return member(teamId) && memberDoc(teamId).role == 'Administrator';
     }
-    // Employees may only use shops listed on their member record.
-    // Records with no shop field belong to the "main" shop.
+    // Shops an employee may use. Members with no shops list (or an empty one)
+    // belong to the "main" shop.
+    function shopsOf(teamId) {
+      let s = memberDoc(teamId).get('shops', []);
+      return s.size() > 0 ? s : ['main'];
+    }
     function inMyShop(teamId, shopId) {
       return admin(teamId)
-        || (member(teamId)
-            && memberDoc(teamId).shops is list
-            && shopId in memberDoc(teamId).shops)
-        || (member(teamId)
-            && !(memberDoc(teamId).shops is list)
-            && shopId == 'main');
+        || (member(teamId) && shopId in shopsOf(teamId));
     }
     function recordShop(data) {
       return ('shop' in data) ? data.shop : 'main';
