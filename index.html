@@ -97,11 +97,13 @@ pre{font:13px/1.35 ui-monospace,Menlo,Consolas,monospace;white-space:pre;overflo
 <div id="app" class="hide">
 <nav>
   <button data-t="sell" class="on">Sell</button>
+  <button data-t="dash">Dashboard</button>
   <button data-t="stock">Stock</button>
   <button data-t="pro" id="nav-pro">Profit</button>
   <button data-t="led">Ledger</button>
   <button data-t="his">History</button>
   <button data-t="audit" id="nav-audit">People & Audit</button>
+  <button data-t="notes">Notes</button>
   <button data-t="syn">Sync</button>
 </nav>
 
@@ -244,6 +246,18 @@ pre{font:13px/1.35 ui-monospace,Menlo,Consolas,monospace;white-space:pre;overflo
 <div class="card" id="alist"></div>
 </section>
 
+<section id="dash" class="hide"><div id="dashbody"></div></section>
+
+<section id="notes" class="hide">
+<div class="card">
+<label for="ntext">New note</label>
+<textarea id="ntext" placeholder="e.g. Order more bread on Monday"></textarea>
+<button class="go" id="nsave">Save note</button>
+<div class="msg" id="nmsg"></div>
+</div>
+<div class="card" id="nlist"></div>
+</section>
+
 <section id="syn" class="hide">
 <div class="card">
 <h2>Multi-device cloud sync</h2>
@@ -283,11 +297,13 @@ pre{font:13px/1.35 ui-monospace,Menlo,Consolas,monospace;white-space:pre;overflo
   <div class="drawer-content">
     <h3>Menu</h3>
     <div class="drawer-item" data-t="sell">🏠 Home / Sell</div>
+    <div class="drawer-item" data-t="dash">📈 Dashboard</div>
     <div class="drawer-item" data-t="his">📊 Reports</div>
     <div class="drawer-item" data-t="stock">📦 Products</div>
     <div class="drawer-item" data-t="stock">🏷️ Inventory Management</div>
     <div class="drawer-item" data-t="led">🛒 Store Management</div>
     <div class="drawer-item" data-t="audit">👥 People & Audit</div>
+    <div class="drawer-item" data-t="notes">📝 Notes</div>
     <div class="drawer-item" data-t="syn">💬 Support & Sync</div>
     <div class="drawer-item" data-t="syn">⚙️ Settings</div>
     <div class="drawer-item" id="drawerLogout" style="color:var(--bad);margin-top:auto">🚪 Logout</div>
@@ -315,9 +331,9 @@ var DEFAULT_FIREBASE_CONFIG = {
 };
 if(!window.SALES_TRACK_FIREBASE_CONFIG||!window.SALES_TRACK_FIREBASE_CONFIG.apiKey||/YOUR_/.test(window.SALES_TRACK_FIREBASE_CONFIG.apiKey+window.SALES_TRACK_FIREBASE_CONFIG.projectId)){window.SALES_TRACK_FIREBASE_CONFIG=DEFAULT_FIREBASE_CONFIG;}
 
-var SK="salestrack_v3",COLS=["items","stockin","sales","tx","exp","audit","users"],SYNC_COLS=["items","stockin","sales","tx","exp","audit"],SHOP_COLS=["items","stockin","sales","tx","exp","audit"];
+var SK="salestrack_v3",COLS=["items","stockin","sales","tx","exp","audit","users","notes"],SYNC_COLS=["items","stockin","sales","tx","exp","audit","notes"],SHOP_COLS=["items","stockin","sales","tx","exp","audit","notes"];
 var S={
-  items:{},stockin:{},sales:{},tx:{},exp:{},audit:{},users:{},del:{},
+  items:{},stockin:{},sales:{},tx:{},exp:{},audit:{},users:{},notes:{},del:{},
   me:"",role:"",userKey:"",lastImp:0,lastSent:0,
   set:{biz:"Sales Track Point",pw:32,foot:"Thank you!"},
   dirty:[],
@@ -474,7 +490,7 @@ function render(){
   $("hlist").innerHTML=h.length?h.map(function(t){
     return '<div class="row"><div><b>'+esc(t.cust)+'</b> <span class="sub">· '+esc(LABEL[t.type]||t.type)+' · by '+esc(t.by)+'</span><div class="sub">'+when(t.ts)+'</div></div><div style="text-align:right"><div class="'+(t.type==="change"||t.type==="pay"?'chg':'cr')+'">'+money(t.amt)+'</div>'+(isAdmin?'<button class="del" data-dt="'+esc(t.id)+'">Delete</button>':'')+'</div></div>'}).join(""):'<div class="sub">No entries yet.</div>';
 
-  renderTeam();updSel();
+  renderTeam();updSel();renderDash();renderNotes();
 
   var aud=arr("audit").filter(function(a){return (S.role==="Administrator")&&(allShops()||inShop(a))}).sort(function(a,b){return b.ts-a.ts}).slice(0,100);
   $("alist").innerHTML=aud.length?aud.map(function(a){
@@ -499,7 +515,7 @@ function since(p){var d=new Date();d.setHours(0,0,0,0);if(p==="today")return d.g
 function say(id,s,bad){$(id).textContent=s;$(id).className="msg"+(bad?" err":"")}
 
 function setTab(t){
-  ["sell","stock","pro","led","his","audit","syn"].forEach(function(s){if($(s))$(s).classList.toggle("hide",s!==t)});
+  ["sell","dash","stock","pro","led","his","audit","notes","syn"].forEach(function(s){if($(s))$(s).classList.toggle("hide",s!==t)});
   document.querySelectorAll("nav button").forEach(function(b){b.classList.toggle("on",b.dataset.t===t)});
   $("drawer").classList.add("hide");
 }
@@ -570,6 +586,7 @@ $("sdone").onclick=function(){
 
 $("iadd").onclick=function(){var n=$("inm").value.trim(),p=parseFloat($("ipr").value),l=parseInt($("ilow").value,10),now=Date.now();
   if(!n||!(p>=0))return say("imsg","Enter name and price.",true);
+  if(sarr("items").some(function(x){return key(x.name)===key(n)}))return say("imsg","\""+n+"\" already exists in this shop. Use Stock in to add more.",true);
   var id=rid();
   put("items",id,{name:n,price:Math.round(p*100)/100,low:isNaN(l)?5:l,cost:parseFloat($("icost").value)>=0?Math.round(parseFloat($("icost").value)*100)/100:null,ts:now,upd:now},"Item Added",n+" @ "+money(p));
   $("inm").value="";$("ipr").value="";$("icost").value="";say("imsg","Item added.");render()};
@@ -645,11 +662,11 @@ $("pset").onclick=function(){S.set={biz:$("pbiz").value.trim()||"Sales Track Poi
 $("ptest").onclick=function(){showReceipt({ts:Date.now(),by:S.me,total:2.5,pay:"cash",cust:"",lines:[{qty:1,name:"Test item",price:2.5}]})};
 
 /* ---- sync ---- */
-function pack(){return JSON.stringify({app:"sales-track",v:3,from:S.me,ts:Date.now(),items:S.items,stockin:S.stockin,sales:S.sales,tx:S.tx,exp:S.exp,audit:S.audit,users:S.users,del:S.del})}
+function pack(){return JSON.stringify({app:"sales-track",v:3,from:S.me,ts:Date.now(),items:S.items,stockin:S.stockin,sales:S.sales,tx:S.tx,exp:S.exp,audit:S.audit,users:S.users,notes:S.notes,del:S.del})}
 function mergeIn(txt){
   var o;try{o=JSON.parse(txt)}catch(e){return -1}
   if(!o||o.app!=="sales-track"||!o.items||!o.stockin||!o.sales||!o.tx||!o.users)return -1;
-  var allowed={items:1,stockin:1,sales:1,tx:1,exp:1,audit:1,users:1};
+  var allowed={items:1,stockin:1,sales:1,tx:1,exp:1,audit:1,users:1,notes:1};
   for(var c in allowed){if(o[c]!==undefined&&(typeof o[c]!=="object"||o[c]===null||Array.isArray(o[c])))return -1}
   var add=0;
   Object.keys(o.del||{}).forEach(function(k){if(!S.del[k]){S.del[k]=o.del[k];mark("d:"+k)}});
@@ -661,6 +678,95 @@ $("send").onclick=function(){var txt=pack(),a=document.createElement("a");a.href
 $("copy").onclick=function(){navigator.clipboard.writeText(pack());say("smsg2","Copied data to clipboard.")};
 $("file").onchange=function(){var f=this.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var n=mergeIn(r.result);if(n<0)return say("smsg2","That backup file is invalid or incomplete.",true);say("smsg2","Imported "+n+" new records. Existing records were kept.");render()};r.readAsText(f)};
 $("imp").onclick=function(){var n=mergeIn($("paste").value.trim());if(n<0)return say("smsg2","That backup text is invalid or incomplete.",true);say("smsg2","Imported "+n+" new records. Existing records were kept.");render()};
+
+/* ---- smart dashboard ---- */
+function hr12(h){var x=h%12===0?12:h%12;return x+(h<12?" AM":" PM")}
+function renderDash(){
+  var el=$("dashbody");if(!el)return;
+  var admin=S.role==="Administrator",DAY=86400000,now=Date.now();
+  var sales=pArr("sales"),items=pArr("items");
+  var t0=since("today"),y0=t0-DAY,w0=since("week"),m0=since("month");
+  function sum(a,b){var t=0,n=0,g=0;sales.forEach(function(x){if(x.ts>=a&&x.ts<b){t+=x.total;n++;g+=x.total-(x.cogs||0)}});return {t:t,n:n,g:g}}
+  var td=sum(t0,now+1),yd=sum(y0,t0),wk=sum(w0,now+1),mo=sum(m0,now+1);
+  var ins=[];
+  // today vs yesterday
+  if(yd.t>0){var pc=Math.round((td.t-yd.t)/yd.t*100);ins.push("📊 Today so far: "+money(td.t)+" vs "+money(yd.t)+" yesterday ("+(pc>=0?"+":"")+pc+"%).")}
+  // busiest hour (last 30 days)
+  var hrs=[],tot30=0;for(var q=0;q<24;q++)hrs.push(0);
+  sales.forEach(function(x){if(x.ts>=now-30*DAY){hrs[new Date(x.ts).getHours()]++;tot30++}});
+  if(tot30>=5){var bh=0;for(q=1;q<24;q++)if(hrs[q]>hrs[bh])bh=q;ins.push("⏰ Busiest time: "+hr12(bh)+" to "+hr12((bh+1)%24)+" (last 30 days).")}
+  // stock analysis (14-day selling speed)
+  var sold={},topm={};
+  sales.forEach(function(x){(x.lines||[]).forEach(function(l){
+    if(x.ts>=now-14*DAY)sold[l.item]=(sold[l.item]||0)+l.qty;
+    if(x.ts>=m0){var o=topm[l.item]||(topm[l.item]={name:l.name,q:0,r:0});o.q+=l.qty;o.r+=l.qty*l.price}
+  })});
+  var out=[],soon=[],low=[],slow=[];
+  items.forEach(function(i){
+    var st=stockOf(i.id),rate=(sold[i.id]||0)/14,lt=i.low==null?5:i.low,nm=esc(i.name)+(allShops()?" ("+esc(shopName(i.shop||"main"))+")":"");
+    if(st<=0)out.push(nm);
+    else if(rate>0&&st/rate<=3)soon.push(nm+" (about "+Math.max(1,Math.ceil(st/rate))+" day"+(Math.ceil(st/rate)>1?"s":"")+" left, "+st+" in stock)");
+    else if(st<=lt)low.push(nm+" ("+st+" left)");
+    else if(!sold[i.id]&&(now-(i.ts||now))>14*DAY)slow.push(nm+" ("+st+" in stock)");
+  });
+  if(out.length)ins.push("🚫 Out of stock: "+out.slice(0,8).join(", ")+(out.length>8?" and "+(out.length-8)+" more":"")+".");
+  if(soon.length)ins.push("⚠️ Running out soon: "+soon.slice(0,6).join("; ")+".");
+  if(low.length)ins.push("📉 Low stock: "+low.slice(0,8).join(", ")+".");
+  if(slow.length)ins.push("🐌 No sales in 14 days: "+slow.slice(0,6).join(", ")+".");
+  // customers
+  var bm={};pArr("tx").forEach(function(t){var k=key(t.cust),c=bm[k]||(bm[k]={name:String(t.cust).trim(),chg:0,cr:0});
+    if(t.type==="change")c.chg+=t.amt;else if(t.type==="buy_change")c.chg-=t.amt;else if(t.type==="credit")c.cr+=t.amt;else if(t.type==="pay")c.cr-=t.amt});
+  var cl=Object.keys(bm).map(function(k){return bm[k]}),tCr=0,tCh=0;cl.forEach(function(c){if(c.cr>0.004)tCr+=c.cr;if(c.chg>0.004)tCh+=c.chg});
+  var owe=cl.filter(function(c){return c.cr>0.004}).sort(function(a,b){return b.cr-a.cr}).slice(0,5);
+  if(tCr>0.004)ins.push("💳 Customers owe you "+money(tCr)+" in total.");
+  if(tCh>0.004)ins.push("🪙 You are holding "+money(tCh)+" in customer change.");
+  var unk=0;if(admin)sales.forEach(function(x){if(x.ts>=m0&&x.unk!==false)unk++});
+  if(unk)ins.push("ℹ️ "+unk+" sales this month have no cost price, so profit looks higher than it is. Add cost prices in Stock.");
+
+  var h='<div class="card tot"><div><span class="sub">Today</span><b>'+money(td.t)+'</b><span class="sub">'+td.n+' sales</span></div>'+
+    '<div><span class="sub">This week</span><b>'+money(wk.t)+'</b><span class="sub">'+wk.n+' sales</span></div>'+
+    '<div><span class="sub">This month</span><b>'+money(mo.t)+'</b><span class="sub">'+mo.n+' sales</span></div></div>';
+  if(admin){
+    var ex=0;pArr("exp").forEach(function(x){if(x.ts>=m0)ex+=x.amount});
+    h+='<div class="card"><div class="row"><span>Gross profit today</span><b class="chg">'+money(td.g)+'</b></div>'+
+      '<div class="row"><span>Gross profit this month</span><b class="chg">'+money(mo.g)+'</b></div>'+
+      '<div class="row"><span>Expenses this month</span><b class="cr">'+money(ex)+'</b></div>'+
+      '<div class="row"><span><b>Net profit this month</b></span><b class="'+(mo.g-ex<0?'cr':'chg')+'">'+money(mo.g-ex)+'</b></div></div>';
+  }
+  // 7-day chart
+  var days=[],mx=1;for(var d=6;d>=0;d--){var a=t0-d*DAY,v=sum(a,a+DAY).t;if(v>mx)mx=v;days.push({l:new Date(a).toLocaleDateString(undefined,{weekday:"short"}),v:v})}
+  h+='<div class="card"><h2 style="margin-top:0">Last 7 days</h2><div style="display:flex;gap:6px;align-items:flex-end;height:130px">'+
+    days.map(function(x){return '<div style="flex:1;text-align:center"><div class="sub" style="font-size:10px">'+(x.v>0?'$'+Math.round(x.v):'')+'</div><div style="background:var(--acc);height:'+Math.max(3,Math.round(x.v/mx*80))+'px;border-radius:6px 6px 0 0"></div><div class="sub" style="font-size:11px">'+esc(x.l)+'</div></div>'}).join("")+'</div></div>';
+  // insights
+  h+='<div class="card"><h2 style="margin-top:0">Smart insights</h2>'+(ins.length?ins.map(function(t){return '<div class="row"><div>'+t+'</div></div>'}).join(""):'<div class="sub">Not enough data yet. Insights appear as you record sales.</div>')+'</div>';
+  // top items
+  var tl=Object.keys(topm).map(function(k){return topm[k]}).sort(function(a,b){return b.r-a.r}).slice(0,5);
+  h+='<div class="card"><h2 style="margin-top:0">Top items this month</h2>'+(tl.length?tl.map(function(x,i){return '<div class="row"><div><b>'+(i+1)+'. '+esc(x.name)+'</b><div class="sub">'+x.q+' sold</div></div><b>'+money(x.r)+'</b></div>'}).join(""):'<div class="sub">No sales this month yet.</div>')+'</div>';
+  // who owes
+  if(owe.length)h+='<div class="card"><h2 style="margin-top:0">Who owes you</h2>'+owe.map(function(c){return '<div class="row"><b>'+esc(c.name)+'</b><b class="cr">'+money(c.cr)+'</b></div>'}).join("")+'</div>';
+  el.innerHTML=h;
+}
+
+/* ---- notes ---- */
+function renderNotes(){
+  var el=$("nlist");if(!el)return;
+  var list=pArr("notes").sort(function(a,b){return (a.done?1:0)-(b.done?1:0)||b.ts-a.ts});
+  el.innerHTML=list.length?list.map(function(n){
+    var can=S.role==="Administrator"||(cloudUser&&n.uid===cloudUser.uid);
+    return '<div class="row" style="align-items:flex-start"><div style="flex:1;'+(n.done?'opacity:.55;text-decoration:line-through':'')+'"><div style="white-space:pre-wrap">'+esc(n.text)+'</div><div class="sub">'+esc(n.by||"")+' · '+when(n.ts)+'</div></div><div style="text-align:right"><button class="lnk" data-nd="'+esc(n.id)+'">'+(n.done?'Reopen':'Done')+'</button>'+(can?'<button class="del" data-nx="'+esc(n.id)+'">Delete</button>':'')+'</div></div>'}).join(""):'<div class="sub">No notes yet.</div>';
+}
+$("nsave").onclick=function(){
+  var t=$("ntext").value.trim();
+  if(!t)return say("nmsg","Write something first.",true);
+  if(allShops())return say("nmsg","Pick one shop in the top menu first (not All shops).",true);
+  put("notes",rid(),{text:t,by:S.me,uid:cloudUser?cloudUser.uid:"",done:false,ts:Date.now()});
+  $("ntext").value="";say("nmsg","Note saved.");render();
+};
+$("nlist").onclick=function(e){
+  var d=e.target.dataset;
+  if(d.nd){var n=S.notes[d.nd];if(!n)return;n.done=!n.done;mark("notes/"+d.nd);save();push();render();return}
+  if(d.nx){var m=S.notes[d.nx];if(!m)return;if(S.role!=="Administrator"&&!(cloudUser&&m.uid===cloudUser.uid))return;if(confirm("Delete this note?")){drop("notes",d.nx);render()}}
+};
 
 /* ---- clear test data (admin) ---- */
 $("clrGo").onclick=function(){
@@ -784,7 +890,7 @@ $("ulist").addEventListener("click",async function(ev){
 
 /* ---- authenticated Firestore multi-device sync ---- */
 var fs=null,unsubs=[],pushing=false;
-function delOk(k){return /^(items|stockin|sales|tx|exp|audit|users)\/[^\/]+$/.test(k)}
+function delOk(k){return /^(items|stockin|sales|tx|exp|audit|users|notes)\/[^\/]+$/.test(k)}
 function mark(k){if(S.live&&S.dirty.indexOf(k)<0)S.dirty.push(k)}
 function lvStatus(s){if($("lvst"))$("lvst").textContent=s}
 function connect(){
