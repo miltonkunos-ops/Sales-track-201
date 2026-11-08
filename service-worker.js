@@ -1,4 +1,4 @@
-const CACHE = 'sales-track-shell-v5';
+const CACHE = 'sales-track-shell-v6';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './firebase-config.js'];
 // Files that must always be fresh when online (so config/app fixes reach users).
 const NETWORK_FIRST = ['/', '/index.html', '/firebase-config.js', '/service-worker.js'];
