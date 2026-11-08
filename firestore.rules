@@ -15,8 +15,7 @@ service cloud.firestore {
     function admin(teamId) {
       return member(teamId) && memberDoc(teamId).role == 'Administrator';
     }
-    // Shops an employee may use. Members with no shops list (or an empty one)
-    // belong to the "main" shop.
+    // Shops an employee may use. A member with no shops list belongs to "main".
     function shopsOf(teamId) {
       let s = memberDoc(teamId).get('shops', []);
       return s.size() > 0 ? s : ['main'];
@@ -28,6 +27,11 @@ service cloud.firestore {
     function recordShop(data) {
       return ('shop' in data) ? data.shop : 'main';
     }
+    // Reading: admins see everything, employees only their shop's records.
+    function canSeeRecord(teamId) {
+      return admin(teamId)
+        || (member(teamId) && resource.data.shop in shopsOf(teamId));
+    }
 
     match /teams/{teamId} {
       allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
@@ -35,7 +39,7 @@ service cloud.firestore {
       allow update, delete: if admin(teamId);
 
       match /members/{uid} {
-        // Allows the creator to add only their own initial administrator record.
+        // The creator adds only their own initial administrator record.
         allow create: if signedIn() && uid == request.auth.uid
           && getAfter(/databases/$(database)/documents/teams/$(teamId)).data.ownerUid == request.auth.uid
           && request.resource.data.role == 'Administrator';
@@ -58,14 +62,23 @@ service cloud.firestore {
         allow update, delete: if admin(teamId);
       }
 
+      // Notes: team members read and write notes in their own shop.
+      // Employees can delete only their own notes; admins can delete any.
+      match /notes/{docId} {
+        allow read: if canSeeRecord(teamId);
+        allow create, update: if inMyShop(teamId, recordShop(request.resource.data));
+        allow delete: if admin(teamId)
+          || (member(teamId) && resource.data.uid == request.auth.uid);
+      }
+
       // Business records are limited to the employee's own shop.
       match /{collection}/{docId} {
         allow read: if collection in ['items', 'stockin', 'sales', 'tx', 'exp']
-          && inMyShop(teamId, recordShop(resource.data));
-        allow delete: if collection in ['items', 'stockin', 'sales', 'tx', 'exp']
-          && admin(teamId);
+          && canSeeRecord(teamId);
         allow create, update: if collection in ['items', 'stockin', 'sales', 'tx', 'exp']
           && inMyShop(teamId, recordShop(request.resource.data));
+        allow delete: if collection in ['items', 'stockin', 'sales', 'tx', 'exp']
+          && admin(teamId);
         // Legacy 'users' collection: administrators only.
         allow read, write: if collection == 'users' && admin(teamId);
       }
