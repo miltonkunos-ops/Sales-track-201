@@ -698,7 +698,7 @@ function renderShops(){
   if(admin&&opts.length>1)html+='<option value="__all">All shops</option>';
   if(sel){sel.innerHTML=html;sel.value=(admin&&viewAll)?"__all":S.shop;sel.classList.toggle("hide",!(admin||opts.length>1));}
   var rs=$("rshop");if(rs){var cur=rs.value;rs.innerHTML=shopList.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>'}).join("");if(cur)rs.value=cur}
-  var sl=$("shoplist");if(sl)sl.innerHTML=shopList.map(function(x){return '<div class="row"><b>'+esc(x.name)+'</b><span class="sub">'+(x.id===S.shop?'viewing now':'')+'</span></div>'}).join("");
+  var sl=$("shoplist");if(sl)sl.innerHTML=shopList.map(function(x){return '<div class="row"><b>'+esc(x.name)+'</b><span class="sub">'+(x.id===S.shop?'viewing now ':'')+(x.id!=="main"?'<button class="del" data-delshop="'+esc(x.id)+'">Remove</button>':'')+'</span></div>'}).join("");
 }
 function startShopWatch(){
   if(shopUnsub||!cloudUser||!S.live)return;
@@ -713,6 +713,13 @@ $("shopSel").onchange=function(){
   if(this.value==="__all"){viewAll=true}else{viewAll=false;S.shop=this.value;save()}
   cart={};render();
 };
+$("shoplist").onclick=async function(e){var id=e.target.dataset.delshop;if(!id||S.role!=="Administrator"||!S.live)return;
+  var used=["items","stockin","sales","tx","exp"].reduce(function(n,c){return n+arr(c).filter(function(r){return (r.shop||"main")===id}).length},0);
+  if(used)return say("shopMsg","This shop still has "+used+" records. Switch to it and use Clear test data first.",true);
+  var staff=teamList.filter(function(m){return m.active!==false&&(m.shops||[]).indexOf(id)>-1});
+  if(staff.length)return say("shopMsg","Disable "+staff.map(function(m){return m.name}).join(", ")+" in Team Members first.",true);
+  if(!confirm("Remove shop \""+shopName(id)+"\"?"))return;
+  try{await firebase.firestore().collection("teams").doc(S.live.t).collection("shops").doc(id).delete();if(S.shop===id){S.shop="main";save()}say("shopMsg","Shop removed.")}catch(x){say("shopMsg",friendlyAuthError(x),true)}};
 $("shopAdd").onclick=async function(){
   var name=$("shopname").value.trim();
   if(S.role!=="Administrator"||!S.live)return say("shopMsg","Only administrators can add shops.",true);
