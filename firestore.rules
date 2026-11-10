@@ -71,6 +71,12 @@ service cloud.firestore {
           || (member(teamId) && resource.data.uid == request.auth.uid);
       }
 
+      // Targets: everyone in the shop can read them; only admins set them.
+      match /targets/{docId} {
+        allow read: if canSeeRecord(teamId);
+        allow create, update, delete: if admin(teamId);
+      }
+
       // Business records are limited to the employee's own shop.
       match /{collection}/{docId} {
         allow read: if collection in ['items', 'stockin', 'sales', 'tx', 'exp']
