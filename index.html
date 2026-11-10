@@ -532,7 +532,7 @@ function render(){
   var sq=key($("sq").value),sl=items.filter(function(i){return !sq||key(i.name).indexOf(sq)>-1}).sort(function(a,b){return a.name.localeCompare(b.name)});
   
   $("slist").innerHTML=sl.length?sl.map(function(i){var st=stockOf(i.id),lo=i.low==null?5:i.low;
-    return '<div class="row"><div><b>'+esc(i.name)+'</b><div class="sub">'+money(i.price)+um(i)+' · <span class="'+(st<=lo?'low':'')+'">'+st+su(i)+' in stock</span></div></div>'+(i.unit==="kg"?'<div><input type="number" inputmode="decimal" min="0" step="0.01" placeholder="kg" data-w="'+esc(i.id)+'" value="'+(cart[i.id]||"")+'" style="width:90px"></div>':'')+'<div class="qty'+(i.unit==="kg"?' hide':'')+'"><button data-m="'+esc(i.id)+'">−</button><span>'+(cart[i.id]||0)+'</span><button data-p="'+esc(i.id)+'">+</button></div></div>'}).join(""):'<div class="sub" style="margin-top:10px">No items available.</div>';
+    return '<div class="row"><div><b>'+esc(i.name)+'</b><div class="sub">'+money(i.price)+um(i)+' · <span class="'+(st<=lo?'low':'')+'">'+st+su(i)+' in stock</span></div></div>'+(i.unit==="kg"?'<div style="display:flex;gap:6px"><input type="number" inputmode="decimal" min="0" step="0.01" placeholder="$" data-a="'+esc(i.id)+'" value="'+(cart[i.id]?Math.round(cart[i.id]*i.price*100)/100:"")+'" style="width:74px"><input type="number" inputmode="decimal" min="0" step="0.001" placeholder="kg" data-w="'+esc(i.id)+'" value="'+(cart[i.id]||"")+'" style="width:74px"></div>':'')+'<div class="qty'+(i.unit==="kg"?' hide':'')+'"><button data-m="'+esc(i.id)+'">−</button><span>'+(cart[i.id]||0)+'</span><button data-p="'+esc(i.id)+'">+</button></div></div>'}).join(""):'<div class="sub" style="margin-top:10px">No items available.</div>';
   $("stot").textContent=money(cartTotal());
   var sc=m[key($("scust").value)];$("sbal").textContent=sc?("Change "+money(sc.chg)+" · owes "+money(sc.cr)):"";
   var isCash=$("spay").value==="cash";$("cashbox").classList.toggle("hide",!isCash);
@@ -629,7 +629,8 @@ $("slist").onclick=function(e){var d=e.target.dataset,items=sarr("items");
     if((cart[d.p]||0)>=stockOf(d.p))return say("smsg","Only "+stockOf(d.p)+" left.",true);cart[d.p]=(cart[d.p]||0)+1;say("smsg","")}
   else if(d.m){cart[d.m]=Math.max(0,(cart[d.m]||0)-1)}else return;render()};
 
-$("slist").onchange=function(e){var id=e.target.dataset.w;if(!id)return;var v=parseFloat(e.target.value),st=stockOf(id);
+$("slist").onchange=function(e){var id=e.target.dataset.w||e.target.dataset.a;if(!id)return;var v=parseFloat(e.target.value),st=stockOf(id),it0=S.items[id];
+  if(e.target.dataset.a){v=(it0&&it0.price>0&&v>0)?v/it0.price:0}
   if(!(v>0)){delete cart[id];say("smsg","")}
   else if(v>st+0.0005){cart[id]=st;say("smsg","Only "+st+" kg left.",true)}
   else{cart[id]=Math.round(v*1000)/1000;say("smsg","")}
