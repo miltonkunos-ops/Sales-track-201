@@ -12,6 +12,10 @@
 <meta name="description" content="A simple point-of-sale, stock and customer ledger application.">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://www.gstatic.com">
+<link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
+<link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js">
+<link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 
@@ -144,6 +148,7 @@ pre{background:#0b1424;border:1px solid #1f2c47}
   <button data-t="his">History</button>
   <button data-t="audit" id="nav-audit">People & Audit</button>
   <button data-t="notes">Notes</button>
+  <button data-t="mkt" id="nav-mkt">Marketing</button>
   <button data-t="syn">Sync</button>
 </nav>
 
@@ -320,6 +325,40 @@ pre{background:#0b1424;border:1px solid #1f2c47}
 <div class="card" id="nlist"></div>
 </section>
 
+<section id="mkt" class="hide">
+<div class="card c-blue">
+<h2 style="margin-top:0">Flier maker</h2>
+<div class="sub">Make a small flier and print it on your receipt printer.</div>
+<label for="mtpl">Flier type (fills in sample words you can change)</label>
+<select id="mtpl"><option value="open">New butchery opening</option><option value="offer">Special offer</option><option value="prices">Price list</option><option value="delivery">Delivery and orders</option></select>
+<label for="mname">Shop name</label><input id="mname" maxlength="40">
+<label for="mhead">Big headline</label><input id="mhead" maxlength="40">
+<label for="msub">Sub headline</label><input id="msub" maxlength="60">
+<label for="mbody">Details (one line each)</label><textarea id="mbody" style="min-height:90px"></textarea>
+<label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" id="mprices" style="width:auto"> Include my price list</label>
+<label for="moffer">Highlighted offer (optional)</label><input id="moffer" maxlength="40">
+<label for="mphone">Phone / WhatsApp</label><input id="mphone" inputmode="tel" maxlength="30">
+<label for="maddr">Where to find us</label><input id="maddr" maxlength="80">
+<label for="mhours">Opening hours</label><input id="mhours" maxlength="50" placeholder="e.g. Mon-Sat 7am-6pm">
+<label for="mfoot">Bottom message</label><input id="mfoot" maxlength="50">
+</div>
+<div class="card">
+<label for="mstyle">Print style</label>
+<select id="mstyle"><option value="text">Text (works on every printer)</option><option value="pic">Picture (nicer look)</option></select>
+<label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" id="mqr" style="width:auto"> Print a QR code (text style, only if your printer supports it)</label>
+<input id="mqrtext" placeholder="QR content, e.g. https://wa.me/263..." style="margin-top:6px">
+<label for="mcopies">Copies</label><input id="mcopies" type="number" inputmode="numeric" min="1" max="20" value="1">
+</div>
+<div class="card c-green">
+<h2 style="margin-top:0">Preview</h2>
+<div style="overflow-x:auto"><div id="mprevtxt" style="background:#fff;color:#000;padding:10px 6px;border-radius:6px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;margin:0 auto;box-sizing:content-box"></div>
+<canvas id="mprevpic" class="hide" style="max-width:100%;background:#fff;border-radius:6px;display:block;margin:0 auto"></canvas></div>
+<button class="go" id="mprint">Print flier</button>
+<button class="go alt" id="mshare">Save or share as picture</button>
+<div class="msg" id="mmsg"></div>
+</div>
+</section>
+
 <section id="syn" class="hide">
 <div class="card">
 <h2>Multi-device cloud sync</h2>
@@ -366,6 +405,7 @@ pre{background:#0b1424;border:1px solid #1f2c47}
     <div class="drawer-item" data-t="led">🛒 Store Management</div>
     <div class="drawer-item" data-t="audit">👥 People & Audit</div>
     <div class="drawer-item" data-t="notes">📝 Notes</div>
+    <div class="drawer-item" data-t="mkt">📣 Marketing</div>
     <div class="drawer-item" data-t="syn">💬 Support & Sync</div>
     <div class="drawer-item" data-t="syn">⚙️ Settings</div>
     <div class="drawer-item" id="drawerLogout" style="color:var(--bad);margin-top:auto">🚪 Logout</div>
@@ -389,6 +429,8 @@ pre{background:#0b1424;border:1px solid #1f2c47}
 <button class="go alt" id="repclose">Close</button>
 <div class="msg" id="repmsg"></div>
 </div></div>
+
+<div id="updbar" class="hide" style="position:fixed;left:12px;right:12px;bottom:12px;z-index:200;background:#15305c;border:1px solid #2f6fe0;border-radius:14px;padding:12px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;box-shadow:0 8px 24px rgba(0,0,0,.5)"><span>A new version is ready.</span><button class="go" id="updbtn" style="margin:0;width:auto;padding:9px 14px">Update now</button></div>
 
 <script src="firebase-config.js"></script>
 <script>
@@ -435,7 +477,7 @@ function hashPassSync(str) {
 }
 
 function load(){try{var r=localStorage.getItem(SK);if(r){var o=JSON.parse(r);Object.keys(S).forEach(function(k){if(o[k]!==undefined)S[k]=o[k]})}}catch(e){memOnly=true}}
-function save(){try{localStorage.setItem(SK,JSON.stringify(S));memOnly=false}catch(e){memOnly=true}}
+function save(){stkCache=null;try{localStorage.setItem(SK,JSON.stringify(S));memOnly=false}catch(e){memOnly=true}}
 function arr(c){return Object.keys(S[c]||{}).map(function(id){return Object.assign({id:id},S[c][id])})}
 
 function logAudit(action, details){
@@ -473,8 +515,12 @@ function drop(c,id, auditAction, auditDesc){
   if(auditAction) logAudit(auditAction, auditDesc);
 }
 
-function stockOf(id){var n=0;arr("stockin").forEach(function(s){if(s.item===id)n+=s.qty});
-  arr("sales").forEach(function(s){(s.lines||[]).forEach(function(l){if(l.item===id)n-=l.qty})});return Math.round(n*1000)/1000}
+var stkCache=null;
+function stockOf(id){
+  if(!stkCache){stkCache={};
+    Object.keys(S.stockin).forEach(function(k){var x=S.stockin[k];stkCache[x.item]=(stkCache[x.item]||0)+x.qty});
+    Object.keys(S.sales).forEach(function(k){(S.sales[k].lines||[]).forEach(function(l){stkCache[l.item]=(stkCache[l.item]||0)-l.qty})});}
+  return Math.round((stkCache[id]||0)*1000)/1000}
 function lq(l){return l.unit==="kg"?l.qty+" kg "+l.name:l.qty+" × "+l.name}
 function um(i){return i.unit==="kg"?"/kg":""}
 function su(i){return i.unit==="kg"?" kg":""}
@@ -494,12 +540,24 @@ function setCloudIdentity(user,member,teamId){
   S.live={t:teamId};localStorage.setItem("salestrack_team_id",teamId);save();$("workspaceLabel").textContent=teamId;checkAuthShell();connect();startTeamWatch();startShopWatch();
 }
 function firebaseReady(){return !!(window.firebase && window.SALES_TRACK_FIREBASE_CONFIG && window.SALES_TRACK_FIREBASE_CONFIG.apiKey && window.SALES_TRACK_FIREBASE_CONFIG.projectId)}
+var fbPromise=null;
 function ensureFirebase(){
-  return new Promise(function(resolve,reject){
+  if(fbPromise)return fbPromise;
+  fbPromise=new Promise(function(resolve,reject){
     if(!window.SALES_TRACK_FIREBASE_CONFIG)return reject(new Error("Firebase config missing. Copy firebase-config_example.js to firebase-config.js and add your web app config."));
-    var urls=["https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js","https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js","https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"];
-    var i=0;function next(){if(i>=urls.length){try{if(!firebase.apps.length)firebase.initializeApp(window.SALES_TRACK_FIREBASE_CONFIG);resolve()}catch(e){reject(e)}return;}var url=urls[i++];if((url.indexOf('firebase-app')>-1&&window.firebase)||(url.indexOf('firebase-auth')>-1&&window.firebase&&firebase.auth)||(url.indexOf('firestore')>-1&&window.firebase&&firebase.firestore)){next();return;}var sc=document.createElement('script');sc.src=url;sc.onload=next;sc.onerror=function(){reject(new Error("Could not load Firebase SDK. Check your internet connection."))};document.head.appendChild(sc)}next();
+    function init(){try{
+      if(!firebase.apps.length){firebase.initializeApp(window.SALES_TRACK_FIREBASE_CONFIG);
+        try{firebase.firestore().enablePersistence({synchronizeTabs:true}).catch(function(){})}catch(x){}}
+      resolve()}catch(e){reject(e)}}
+    if(window.firebase&&firebase.auth&&firebase.firestore)return init();
+    var urls=["https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js","https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js","https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"],left=urls.length,failed=false;
+    urls.forEach(function(u){var sc=document.createElement("script");sc.src=u;sc.async=false;
+      sc.onload=function(){if(!failed&&--left===0)init()};
+      sc.onerror=function(){if(!failed){failed=true;reject(new Error("Could not load Firebase SDK. Check your internet connection."))}};
+      document.head.appendChild(sc)});
   });
+  fbPromise.catch(function(){fbPromise=null});
+  return fbPromise;
 }
 /* ---- offline sign-in ---- */
 async function pbk(pass,salt){
@@ -560,6 +618,7 @@ function render(){
   if($("admin-shops")) $("admin-shops").style.display = isAdmin ? "block" : "none";
   if($("admin-clear")) $("admin-clear").style.display = isAdmin ? "block" : "none";
   if($("tgtBtn")) $("tgtBtn").style.display = isAdmin ? "block" : "none";
+  if($("nav-mkt")) $("nav-mkt").style.display = isAdmin ? "block" : "none";
 
   var items=sarr("items"),m=balances(),keys=Object.keys(m).sort();
   $("names").innerHTML=keys.map(function(k){return '<option value="'+esc(m[k].name)+'">'}).join("");
@@ -599,7 +658,7 @@ function render(){
   $("hlist").innerHTML=h.length?h.map(function(t){
     return '<div class="row"><div><b>'+esc(t.cust)+'</b> <span class="sub">· '+esc(LABEL[t.type]||t.type)+' · by '+esc(t.by)+'</span><div class="sub">'+when(t.ts)+'</div></div><div style="text-align:right"><div class="'+(t.type==="change"||t.type==="pay"?'chg':'cr')+'">'+money(t.amt)+'</div>'+(isAdmin?'<button class="del" data-dt="'+esc(t.id)+'">Delete</button>':'')+'</div></div>'}).join(""):'<div class="sub">No entries yet.</div>';
 
-  renderTeam();updSel();renderDash();renderNotes();
+  renderTeam();updSel();if(!$("dash").classList.contains("hide"))renderDash();renderNotes();
 
   var aud=arr("audit").filter(function(a){return (S.role==="Administrator")&&(allShops()||inShop(a))}).sort(function(a,b){return b.ts-a.ts}).slice(0,100);
   $("alist").innerHTML=aud.length?aud.map(function(a){
@@ -625,9 +684,12 @@ function since(p){var d=new Date();d.setHours(0,0,0,0);if(p==="today")return d.g
 function say(id,s,bad){$(id).textContent=s;$(id).className="msg"+(bad?" err":"")}
 
 function setTab(t){
-  ["sell","dash","stock","pro","led","his","audit","notes","syn"].forEach(function(s){if($(s))$(s).classList.toggle("hide",s!==t)});
+  if(t==="mkt"&&S.role!=="Administrator")t="sell";
+  ["sell","dash","stock","pro","led","his","audit","notes","mkt","syn"].forEach(function(s){if($(s))$(s).classList.toggle("hide",s!==t)});
   document.querySelectorAll("nav button").forEach(function(b){b.classList.toggle("on",b.dataset.t===t)});
   $("drawer").classList.add("hide");
+  if(t==="dash")renderDash();
+  if(t==="mkt"){mkInit();mkDraw()}
 }
 
 document.querySelectorAll("nav button").forEach(function(b){b.onclick=function(){setTab(b.dataset.t)}});
@@ -785,7 +847,7 @@ $("selPrint").onclick=function(){
   say("selMsg","Sent "+list.length+" receipts to the printer.");
 };
 $("rshare").onclick=function(){if(navigator.share)navigator.share({text:curRcpt}).catch(function(){});else{navigator.clipboard.writeText(curRcpt);$("rmsg").textContent="Copied receipt."}};
-$("pset").onclick=function(){S.set={biz:$("pbiz").value.trim()||"Sales Track Point",pw:parseInt($("ppw").value,10)||32,foot:$("pfoot").value.trim(),auto:$("pauto").checked};save();say("pmsg","Saved.")};
+$("pset").onclick=function(){S.set=Object.assign({},S.set,{biz:$("pbiz").value.trim()||"Sales Track Point",pw:parseInt($("ppw").value,10)||32,foot:$("pfoot").value.trim(),auto:$("pauto").checked});save();say("pmsg","Saved.")};
 $("ptest").onclick=function(){showReceipt({ts:Date.now(),by:S.me,total:2.5,pay:"cash",cust:"",lines:[{qty:1,name:"Test item",price:2.5}]})};
 
 /* ---- sync ---- */
@@ -1067,6 +1129,145 @@ $("nlist").onclick=function(e){
   if(d.nx){var m=S.notes[d.nx];if(!m)return;if(S.role!=="Administrator"&&!(cloudUser&&m.uid===cloudUser.uid))return;if(confirm("Delete this note?")){drop("notes",d.nx);render()}}
 };
 
+/* ---- marketing: fliers ---- */
+var MK_TPL={
+  open:{head:"Now open!",sub:"Fresh meat butchery",body:"Fresh chicken and quality cuts\nClean, fresh and affordable\nCome and see us today!",offer:"Opening specials",prices:false,foot:"Fresh meat every day"},
+  offer:{head:"Special offer",sub:"This week only",body:"Buy 5 kg and save\nWhile stocks last",offer:"Save $1 on 5 kg",prices:false,foot:"Come early!"},
+  prices:{head:"Price list",sub:"Fresh every day",body:"",offer:"",prices:true,foot:"Quality you can trust"},
+  delivery:{head:"We deliver!",sub:"Order by phone or WhatsApp",body:"Fresh meat to your door\nFast and reliable",offer:"Free delivery nearby",prices:false,foot:"Call us today"}
+};
+var MK_IDS={name:"mname",head:"mhead",sub:"msub",body:"mbody",offer:"moffer",phone:"mphone",addr:"maddr",hours:"mhours",foot:"mfoot",qrtext:"mqrtext"};
+var mkInited=false,mkT=null;
+function mkRead(){var m={tpl:$("mtpl").value,prices:$("mprices").checked,qr:$("mqr").checked,style:$("mstyle").value,copies:Math.max(1,Math.min(20,parseInt($("mcopies").value,10)||1))};
+  Object.keys(MK_IDS).forEach(function(k){m[k]=$(MK_IDS[k]).value});return m}
+function mkApply(m){Object.keys(MK_IDS).forEach(function(k){$(MK_IDS[k]).value=m[k]||""});
+  $("mtpl").value=m.tpl||"open";$("mprices").checked=!!m.prices;$("mqr").checked=!!m.qr;$("mstyle").value=m.style||"text";$("mcopies").value=m.copies||1}
+function mkInit(){
+  if(mkInited)return;mkInited=true;var m=S.set.mkt;
+  if(!m){var t=MK_TPL.open;m={tpl:"open",name:S.set.biz||"",head:t.head,sub:t.sub,body:t.body,offer:t.offer,prices:t.prices,foot:t.foot,phone:"",addr:"",hours:"",style:"text",qr:false,qrtext:"",copies:1}}
+  mkApply(m);
+}
+function mkChanged(){mkDraw();clearTimeout(mkT);mkT=setTimeout(function(){S.set.mkt=mkRead();save()},600)}
+$("mtpl").onchange=function(){var t=MK_TPL[this.value];$("mhead").value=t.head;$("msub").value=t.sub;$("mbody").value=t.body;$("moffer").value=t.offer;$("mprices").checked=t.prices;$("mfoot").value=t.foot;mkChanged()};
+["mname","mhead","msub","mbody","moffer","mphone","maddr","mhours","mfoot","mqrtext","mcopies"].forEach(function(id){$(id).oninput=mkChanged});
+["mprices","mqr","mstyle"].forEach(function(id){$(id).onchange=mkChanged});
+
+function mkPriceItems(){return sarr("items").sort(function(a,b){return a.name.localeCompare(b.name)}).slice(0,14)}
+// The flier as lines of text: used for the preview and for printing in text style.
+function flierLines(m,w){
+  var L=[];function add(t,al,sz,b){L.push({t:ascii(t),al:al||"c",sz:sz||1,b:!!b})}
+  function addW(t,al,sz,b){wrapT(ascii(t),Math.max(4,Math.floor(w/sz))).forEach(function(x){add(x,al,sz,b)})}
+  var eq=Array(w+1).join("="),ds=Array(w+1).join("-"),st=Array(w+1).join("*");
+  add(eq);if(m.name)addW(m.name.toUpperCase(),"c",1,true);add(eq);
+  if(m.head){var hs=m.head.length<=Math.floor(w/3)?3:2;addW(m.head.toUpperCase(),"c",hs,true)}
+  if(m.sub)addW(m.sub,"c",1,true);
+  add(ds);
+  String(m.body||"").split("\n").forEach(function(x){x=x.trim();if(x)addW(x,"c",1,false)});
+  if(m.prices){var it=mkPriceItems();if(it.length){add(ds);add("PRICE LIST","c",1,true);it.forEach(function(i){add(padLR(i.name,money(i.price)+um(i),w),"l",1,false)})}}
+  if(m.offer){add(ds);add(st);addW(m.offer.toUpperCase(),"c",2,true);add(st)}
+  add(ds);
+  if(m.phone){add("CALL / WHATSAPP","c",1,true);addW(m.phone,"c",2,true)}
+  if(m.addr)addW(m.addr,"c",1,false);
+  if(m.hours)addW("Open: "+m.hours,"c",1,false);
+  if(m.foot){add(ds);addW(m.foot,"c",1,true)}
+  add(eq);
+  return L;
+}
+function qrBytes(txt){
+  var d=[],i;for(i=0;i<txt.length&&i<120;i++)d.push(txt.charCodeAt(i)&0x7F);var n=d.length+3;
+  return [0x1D,0x28,0x6B,0x04,0x00,0x31,0x41,0x32,0x00, 0x1D,0x28,0x6B,0x03,0x00,0x31,0x43,0x06, 0x1D,0x28,0x6B,0x03,0x00,0x31,0x45,0x31,
+          0x1D,0x28,0x6B,n&255,n>>8,0x31,0x50,0x30].concat(d,[0x1D,0x28,0x6B,0x03,0x00,0x31,0x51,0x30]);
+}
+function flierBytes(m,w,copies){
+  var out=[];function B(a){for(var i=0;i<a.length;i++)out.push(a[i])}
+  for(var c=0;c<copies;c++){
+    B([0x1B,0x40]);
+    flierLines(m,w).forEach(function(l){
+      B([0x1B,0x61,l.al==="l"?0:1]);B([0x1B,0x45,l.b?1:0]);B([0x1D,0x21,(l.sz-1)*0x11]);
+      for(var i=0;i<l.t.length;i++)out.push(l.t.charCodeAt(i)&0x7F);out.push(0x0A);
+    });
+    B([0x1D,0x21,0x00,0x1B,0x45,0x00,0x1B,0x61,0x01]);
+    if(m.qr&&m.qrtext){B(qrBytes(m.qrtext));out.push(0x0A)}
+    B([0x1B,0x61,0x00,0x1B,0x64,0x05]);
+  }
+  return out;
+}
+function printBytes(by){
+  var bin="";for(var i=0;i<by.length;i++)bin+=String.fromCharCode(by[i]);
+  location.href="intent:base64,"+btoa(bin)+"#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;";
+}
+// The flier as a picture: used for the preview, for picture-style printing and for sharing.
+function flierCanvas(m,scale){
+  var u=scale,W=(S.set.pw===48?576:384)*u,pad=14*u,mw=W-2*pad,FF='"Helvetica Neue",Helvetica,Arial,sans-serif';
+  var cv=document.createElement("canvas");cv.width=W;cv.height=20;var ctx=cv.getContext("2d");
+  function font(sz,b,it){ctx.font=(it?"italic ":"")+(b?"bold ":"")+Math.round(sz*u)+"px "+FF}
+  function wrap(t,sz,b,maxw){font(sz,b);var out=[],cur="";String(t).split(/\s+/).forEach(function(wd){if(!wd)return;var test=cur?cur+" "+wd:wd;if(ctx.measureText(test).width>maxw&&cur){out.push(cur);cur=wd}else cur=test});if(cur)out.push(cur);return out}
+  function run(draw){
+    var y=pad;ctx.textBaseline="top";
+    function text(t,sz,b,o){o=o||{};var ls=wrap(t,sz,b,mw);ls.forEach(function(x){font(sz,b,o.it);if(draw){ctx.fillStyle="#000";ctx.textAlign="center";ctx.fillText(x,W/2,y)}y+=Math.round(sz*1.2*u)})}
+    function gap(n){y+=n*u}
+    function rule(kind){if(draw){ctx.fillStyle="#000";if(kind==="dash"){for(var x=pad;x<W-pad;x+=10*u)ctx.fillRect(x,y,5*u,2*u)}else if(kind==="double"){ctx.fillRect(pad,y,mw,3*u);ctx.fillRect(pad,y+6*u,mw,1.5*u)}}y+=(kind==="double"?12:8)*u}
+    rule("double");if(m.name){text(m.name.toUpperCase(),20,true);gap(2);}rule("double");gap(4);
+    if(m.head){
+      var hs=48,hl;for(;hs>24;hs-=2){hl=wrap(m.head.toUpperCase(),hs,true,mw-24*u);if(hl.length<=2)break}
+      hl=wrap(m.head.toUpperCase(),hs,true,mw-24*u);var lh=Math.round(hs*1.15*u),bh=hl.length*lh+16*u;
+      if(draw){ctx.fillStyle="#000";ctx.fillRect(pad,y,mw,bh)}
+      var yy=y+8*u;hl.forEach(function(x){font(hs,true);if(draw){ctx.fillStyle="#fff";ctx.textAlign="center";ctx.fillText(x,W/2,yy)}yy+=lh});
+      y+=bh+8*u}
+    if(m.sub){text(m.sub,22,true);gap(2)}
+    rule("dash");
+    String(m.body||"").split("\n").forEach(function(x){x=x.trim();if(x)text(x,20,false)});
+    if(m.prices){var it=mkPriceItems();if(it.length){gap(4);rule("dash");text("PRICE LIST",20,true);gap(2);
+      it.forEach(function(i){var pr=money(i.price)+um(i);font(20,false);ctx.textAlign="left";var nw=ctx.measureText(i.name).width;ctx.textAlign="right";var pw2=ctx.measureText(pr).width;
+        if(draw){ctx.fillStyle="#000";ctx.textAlign="left";ctx.fillText(i.name,pad,y);ctx.textAlign="right";ctx.fillText(pr,W-pad,y);
+          for(var x=pad+nw+8*u;x<W-pad-pw2-8*u;x+=7*u)ctx.fillRect(x,y+19*u,2*u,2*u)}
+        y+=Math.round(25*u)})}}
+    if(m.offer){gap(8);var ol=wrap(m.offer.toUpperCase(),30,true,mw-34*u),ln=Math.round(34*u),oh=ol.length*ln+22*u;
+      if(draw){ctx.strokeStyle="#000";ctx.lineWidth=4*u;ctx.strokeRect(pad+2*u,y+2*u,mw-4*u,oh-4*u);ctx.lineWidth=1.5*u;ctx.strokeRect(pad+9*u,y+9*u,mw-18*u,oh-18*u)}
+      var oy=y+11*u;ol.forEach(function(x){font(30,true);if(draw){ctx.fillStyle="#000";ctx.textAlign="center";ctx.fillText(x,W/2,oy)}oy+=ln});y+=oh+4*u}
+    gap(6);rule("dash");
+    if(m.phone){text("CALL / WHATSAPP",18,true);var ps=44;font(ps,true);while(ctx.measureText(m.phone).width>mw&&ps>20){ps-=2;font(ps,true)}text(m.phone,ps,true)}
+    if(m.addr){gap(2);text(m.addr,19,false)}
+    if(m.hours)text("Open: "+m.hours,19,false);
+    if(m.foot){gap(4);rule("dash");text(m.foot,20,true,{it:true})}
+    gap(4);rule("double");
+    return y+pad;
+  }
+  var H=run(false);cv.height=Math.ceil(H);ctx.fillStyle="#fff";ctx.fillRect(0,0,W,cv.height);run(true);
+  return cv;
+}
+function canvasRaster(cv){
+  var W=cv.width,H=cv.height,d=cv.getContext("2d").getImageData(0,0,W,H).data,xb=W/8,out=[];
+  for(var y0=0;y0<H;y0+=128){var h=Math.min(128,H-y0);out.push(0x1D,0x76,0x30,0x00,xb&255,xb>>8,h&255,h>>8);
+    for(var y=y0;y<y0+h;y++)for(var b=0;b<xb;b++){var by=0;for(var bit=0;bit<8;bit++){var i=(y*W+b*8+bit)*4,lum=0.3*d[i]+0.59*d[i+1]+0.11*d[i+2];if(lum<150)by|=(0x80>>bit)}out.push(by)}}
+  return out;
+}
+function mkDraw(){
+  var m=mkRead(),w=S.set.pw||32,pt=$("mprevtxt"),pc=$("mprevpic");
+  if(m.style==="pic"){pt.classList.add("hide");pc.classList.remove("hide");var cv=flierCanvas(m,1);pc.width=cv.width;pc.height=cv.height;pc.getContext("2d").drawImage(cv,0,0)}
+  else{pc.classList.add("hide");pt.classList.remove("hide");pt.style.width=w+"ch";
+    pt.innerHTML=flierLines(m,w).map(function(l){return '<div style="text-align:'+(l.al==="l"?"left":"center")+';font-size:'+(14*l.sz)+'px;line-height:1.15;font-weight:'+(l.b?800:400)+';white-space:pre">'+esc(l.t)+'</div>'}).join("")+((m.qr&&m.qrtext)?'<div style="text-align:center;margin:6px 0;font-size:12px">[ QR code prints here ]</div>':'')}
+}
+$("mprint").onclick=function(){
+  var m=mkRead(),w=S.set.pw||32;
+  if(!m.head&&!m.body&&!m.offer&&!m.prices)return say("mmsg","Write something for the flier first.",true);
+  S.set.mkt=m;save();
+  try{
+    if(m.style==="pic"){var n=Math.min(m.copies,3),r=canvasRaster(flierCanvas(m,1)),out=[],i;
+      for(var c=0;c<n;c++){out.push(0x1B,0x40);for(i=0;i<r.length;i++)out.push(r[i]);out.push(0x1B,0x64,0x05)}
+      printBytes(out);say("mmsg","Sent "+n+" picture flier"+(n>1?"s":"")+" to the printer."+(m.copies>3?" Picture style prints 3 per tap. Tap Print again for more.":""))}
+    else{printBytes(flierBytes(m,w,m.copies));say("mmsg","Sent "+m.copies+" flier"+(m.copies>1?"s":"")+" to the printer.")}
+  }catch(e){say("mmsg","Could not print: "+(e.message||e),true)}
+};
+$("mshare").onclick=function(){
+  var m=mkRead();flierCanvas(m,2).toBlob(function(b){
+    if(!b)return say("mmsg","Could not make the picture.",true);
+    var f=new File([b],"flier.png",{type:"image/png"});
+    if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],title:m.head||"Flier"}).catch(function(){});
+    else{var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="flier.png";document.body.appendChild(a);a.click();a.remove();say("mmsg","Picture saved to your downloads.")}
+  },"image/png");
+};
+
 /* ---- clear test data (admin) ---- */
 $("clrGo").onclick=function(){
   if(S.role!=="Administrator")return say("clrMsg","Only administrators can clear data.",true);
@@ -1090,175 +1291,4 @@ function myShopIds(){
 }
 function renderShops(){
   var sel=$("shopSel"),admin=S.role==="Administrator";
-  var ids=myShopIds(),opts=shopList.filter(function(x){return ids.indexOf(x.id)>-1});
-  if(!opts.length)opts=[{id:"main",name:"Main shop"}];
-  if(!opts.some(function(x){return x.id===S.shop}))S.shop=opts[0].id;
-  var html=opts.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>'}).join("");
-  if(admin&&opts.length>1)html+='<option value="__all">All shops</option>';
-  if(sel){sel.innerHTML=html;sel.value=(admin&&viewAll)?"__all":S.shop;sel.classList.toggle("hide",!(admin||opts.length>1));}
-  var rs=$("rshop");if(rs){var cur=rs.value;rs.innerHTML=shopList.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>'}).join("");if(cur)rs.value=cur}
-  var sl=$("shoplist");if(sl)sl.innerHTML=shopList.map(function(x){return '<div class="row"><b>'+esc(x.name)+'</b><span class="sub">'+(x.id===S.shop?'viewing now ':'')+(x.id!=="main"?'<button class="del" data-delshop="'+esc(x.id)+'">Remove</button>':'')+'</span></div>'}).join("");
-}
-function startShopWatch(){
-  if(shopUnsub||!cloudUser||!S.live)return;
-  try{shopUnsub=firebase.firestore().collection("teams").doc(S.live.t).collection("shops").onSnapshot(function(sn){
-    var l=sn.docs.map(function(d){var x=d.data();return {id:d.id,name:x.name||d.id}}).sort(function(a,b){return a.name.localeCompare(b.name)});
-    if(!l.some(function(x){return x.id==="main"}))l.unshift({id:"main",name:"Main shop"});
-    try{localStorage.setItem("salestrack_shops_"+S.live.t,JSON.stringify(l))}catch(x){}shopList=l;renderShops();render();
-  },function(){shopList=[{id:"main",name:"Main shop"}];renderShops()})}catch(e){}
-}
-function stopShopWatch(){if(shopUnsub){shopUnsub();shopUnsub=null}shopList=[{id:"main",name:"Main shop"}];viewAll=false}
-$("shopSel").onchange=function(){
-  if(this.value==="__all"){viewAll=true}else{viewAll=false;S.shop=this.value;save()}
-  cart={};render();
-};
-$("shoplist").onclick=async function(e){var id=e.target.dataset.delshop;if(!id||S.role!=="Administrator"||!S.live)return;
-  var used=["items","stockin","sales","tx","exp"].reduce(function(n,c){return n+arr(c).filter(function(r){return (r.shop||"main")===id}).length},0);
-  if(used)return say("shopMsg","This shop still has "+used+" records. Switch to it and use Clear test data first.",true);
-  var staff=teamList.filter(function(m){return m.active!==false&&(m.shops||[]).indexOf(id)>-1});
-  if(staff.length)return say("shopMsg","Disable "+staff.map(function(m){return m.name}).join(", ")+" in Team Members first.",true);
-  if(!confirm("Remove shop \""+shopName(id)+"\"?"))return;
-  try{await firebase.firestore().collection("teams").doc(S.live.t).collection("shops").doc(id).delete();if(S.shop===id){S.shop="main";save()}say("shopMsg","Shop removed.")}catch(x){say("shopMsg",friendlyAuthError(x),true)}};
-$("shopAdd").onclick=async function(){
-  var name=$("shopname").value.trim();
-  if(S.role!=="Administrator"||!S.live)return say("shopMsg","Only administrators can add shops.",true);
-  if(!name)return say("shopMsg","Enter a shop name.",true);
-  var id="s"+Date.now().toString(36);
-  try{await firebase.firestore().collection("teams").doc(S.live.t).collection("shops").doc(id).set({name:name,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-    $("shopname").value="";say("shopMsg",name+" added.");
-  }catch(e){say("shopMsg",friendlyAuthError(e),true)}
-};
-
-/* ---- team management (cloud) ---- */
-var teamList=[],teamUnsub=null;
-function renderTeam(){
-  var el=$("ulist");if(!el)return;
-  if(!cloudUser){el.innerHTML='<div class="sub">Sign in to see your team.</div>';return;}
-  if(!teamList.length){el.innerHTML='<div class="sub">No team members loaded yet.</div>';return;}
-  var admin=S.role==="Administrator";
-  el.innerHTML=teamList.map(function(m){
-    var me=m.uid===cloudUser.uid,on=m.active!==false;
-    return '<div class="row"><div><b>'+esc(m.name||"")+'</b>'+(me?' <span class="sub">(you)</span>':'')+'<div class="sub">'+esc(m.email||"")+'</div><div class="sub">'+esc(m.role||"Employee")+(m.role==="Administrator"?' · all shops':' · '+esc(shopName((m.shops&&m.shops[0])||"main")))+' · '+(on?'Active':'<span class="low">Disabled</span>')+'</div></div>'+
-    (admin&&!me?'<div style="text-align:right"><button class="del" data-tog="'+esc(m.uid)+'">'+(on?'Disable':'Enable')+'</button> <button class="del" data-role="'+esc(m.uid)+'">Make '+(m.role==="Administrator"?'Employee':'Admin')+'</button></div>':'')+'</div>'}).join("");
-}
-function startTeamWatch(){
-  if(teamUnsub||!cloudUser||!S.live||S.role!=="Administrator")return;
-  try{teamUnsub=firebase.firestore().collection("teams").doc(S.live.t).collection("members").onSnapshot(function(sn){
-    teamList=sn.docs.map(function(d){var x=d.data();x.uid=x.uid||d.id;return x}).sort(function(a,b){return String(a.name).localeCompare(String(b.name))});renderTeam();
-  },function(e){teamList=[];var el=$("ulist");if(el)el.innerHTML='<div class="sub">Could not load team: '+esc(e.code||e.message)+'</div>'})}catch(e){}
-}
-function stopTeamWatch(){if(teamUnsub){teamUnsub();teamUnsub=null}teamList=[]}
-function friendlyAuthError(e){
-  var c=e&&e.code||"";
-  if(c==="auth/email-already-in-use")return "That email already has a login. Ask them to sign in, or use a different email.";
-  if(c==="auth/invalid-email")return "That email address is not valid.";
-  if(c==="auth/weak-password")return "Password is too weak. Use at least 8 characters.";
-  if(c==="permission-denied"||c==="firestore/permission-denied")return "Permission denied. Only active Administrators can add members. Check the Firestore rules are published.";
-  return e&&e.message||"Could not add team member.";
-}
-$("regGo").onclick=async function(){
-  var name=$("rname").value.trim(),email=$("ruser").value.trim().toLowerCase(),pass=$("rpass").value,role=$("rrole").value;
-  if(!cloudUser||!S.live)return say("regMsg","Sign in to your workspace first.",true);
-  if(S.role!=="Administrator")return say("regMsg","Only administrators can add team members.",true);
-  if(!name||!email||!pass)return say("regMsg","Enter name, email and a temporary password.",true);
-  if(pass.length<8)return say("regMsg","Password must be at least 8 characters.",true);
-  var btn=$("regGo");btn.disabled=true;say("regMsg","Creating account…");
-  var secondary=null;
-  try{
-    await ensureFirebase();
-    secondary=firebase.initializeApp(window.SALES_TRACK_FIREBASE_CONFIG,"staffcreate"+Date.now());
-    var cred=await secondary.auth().createUserWithEmailAndPassword(email,pass);
-    var uid=cred.user.uid;
-    await firebase.firestore().collection("teams").doc(S.live.t).collection("members").doc(uid).set({uid:uid,email:email,name:name,role:role,shops:(role==="Administrator"?[]:[$("rshop").value||"main"]),active:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-    await secondary.auth().signOut();
-    $("rname").value="";$("ruser").value="";$("rpass").value="";$("rrole").value="Employee";
-    say("regMsg",name+" added. Share: email "+email+", the temporary password, and workspace ID "+S.live.t+".");
-  }catch(e){say("regMsg",friendlyAuthError(e),true)}
-  finally{if(secondary){try{await secondary.delete()}catch(x){}}btn.disabled=false}
-};
-$("ulist").addEventListener("click",async function(ev){
-  var b=ev.target.closest("button");if(!b||S.role!=="Administrator"||!S.live)return;
-  var uid=b.getAttribute("data-tog")||b.getAttribute("data-role");if(!uid)return;
-  var m=teamList.filter(function(x){return x.uid===uid})[0];if(!m)return;
-  var ref=firebase.firestore().collection("teams").doc(S.live.t).collection("members").doc(uid);
-  try{
-    if(b.hasAttribute("data-tog")){
-      var on=m.active!==false;
-      if(!confirm((on?"Disable ":"Enable ")+(m.name||m.email)+"?"))return;
-      await ref.update({active:!on});
-    }else{
-      var nr=m.role==="Administrator"?"Employee":"Administrator";
-      if(!confirm("Change "+(m.name||m.email)+" to "+nr+"?"))return;
-      await ref.update({role:nr});
-    }
-  }catch(e){alert(friendlyAuthError(e))}
-});
-
-/* ---- authenticated Firestore multi-device sync ---- */
-var fs=null,unsubs=[],pushing=false;
-function delOk(k){return /^(items|stockin|sales|tx|exp|audit|users|notes|targets)\/[^\/]+$/.test(k)}
-function mark(k){if(S.live&&S.dirty.indexOf(k)<0)S.dirty.push(k)}
-function lvStatus(s){if($("lvst"))$("lvst").textContent=s}
-function connect(){
-  if(!S.live||!cloudUser||fs)return;
-  try{fs=firebase.firestore();var team=fs.collection("teams").doc(S.live.t);lvStatus("Connecting securely to workspace…");
-    var __admin=S.role==="Administrator",__ids=myShopIds();
-    SYNC_COLS.forEach(function(c){
-      if(c==="audit"&&!__admin)return;
-      var __q=team.collection(c);
-      if(!__admin){__q=__q.where("shop","in",__ids.slice(0,10))}
-      unsubs.push(__q.onSnapshot(function(sn){var changed=false;sn.docChanges().forEach(function(ch){var id=ch.doc.id;if(ch.type==="removed"){if(S[c][id]){delete S[c][id];changed=true}return;}var data=ch.doc.data();if(JSON.stringify(S[c][id])!==JSON.stringify(data)){S[c][id]=data;changed=true;}});if(changed){save();render();}lvStatus("Connected · cloud changes are synchronising across devices.");},function(e){lvStatus("Cloud sync error: "+(e.code||"permission-denied")+". Check Firestore rules and workspace membership.")}));});
-    unsubs.push(team.onSnapshot(function(doc){if(!doc.exists){lvStatus("Workspace not found.");return;}},function(){lvStatus("Cannot read workspace. Check access rules.")}));
-    SHOP_COLS.forEach(function(c){Object.keys(S[c]||{}).forEach(function(id){if(!S[c][id].shop){S[c][id].shop="main";mark(c+"/"+id)}})});save();
-    if(!S.seeded){SYNC_COLS.forEach(function(c){Object.keys(S[c]||{}).forEach(function(id){mark(c+"/"+id)})});S.seeded=true;save();}
-    push();
-  }catch(e){fs=null;lvStatus("Could not start cloud sync: "+e.message)}
-}
-function push(){
-  if(!fs||!S.live||!S.dirty.length||pushing)return;
-  pushing=true;var keys=S.dirty.slice(0,400),batch=fs.batch(),team=fs.collection("teams").doc(S.live.t);
-  keys.forEach(function(k){if(k.indexOf("d:")===0){var dk=k.slice(2);if(delOk(dk)&&SYNC_COLS.indexOf(dk.split("/")[0])>-1){var a=dk.split("/");batch.delete(team.collection(a[0]).doc(a[1]));}}
-    else{var p=k.split("/");if(SYNC_COLS.indexOf(p[0])>-1&&S[p[0]][p[1]])batch.set(team.collection(p[0]).doc(p[1]),S[p[0]][p[1]]);}});
-  batch.commit().then(function(){S.dirty=S.dirty.filter(function(k){return keys.indexOf(k)<0});save();pushing=false;if(S.dirty.length)push();}).catch(function(e){pushing=false;lvStatus("Cloud write failed: "+(e.code||e.message)+". Check membership and security rules.")});
-}
-$("copyWorkspace").onclick=function(){if(!S.live)return lvStatus("No workspace connected.");if(navigator.clipboard)navigator.clipboard.writeText(S.live.t).then(function(){lvStatus("Workspace ID copied.")});else lvStatus("Clipboard unavailable. Workspace ID: "+S.live.t)};
-$("send").onclick=function(){var txt=pack(),a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"application/json"}));a.download="salestrack-backup.json";a.click();say("smsg2","Backup downloaded. Store it safely.")};
-$("copy").onclick=function(){navigator.clipboard.writeText(pack()).then(function(){say("smsg2","Backup copied.")}).catch(function(){say("smsg2","Clipboard unavailable.",true)})};
-$("file").onchange=function(){var f=this.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var n=mergeIn(r.result);if(n<0)return say("smsg2","Invalid backup file.",true);say("smsg2","Imported "+n+" records.");push();render()};r.readAsText(f)};
-$("imp").onclick=function(){var n=mergeIn($("paste").value.trim());if(n<0)return say("smsg2","Invalid backup text.",true);say("smsg2","Imported "+n+" records.");push();render()};
-
-load();S.live=null;$("pbiz").value=S.set.biz;$("ppw").value=String(S.set.pw);$("pfoot").value=S.set.foot;$("pauto").checked=!!S.set.auto;save();checkAuthShell();var authWatching=false;
-async function resumeCloud(user){
-  var team=$("teamid").value.trim()||localStorage.getItem("salestrack_team_id");
-  if(!team){lvStatus("Enter your workspace ID to sign in.");return}
-  try{var m=await firebase.firestore().collection("teams").doc(team).collection("members").doc(user.uid).get();
-    if(m.exists){$("teamid").value=team;localStorage.setItem("salestrack_team_id",team);setCloudIdentity(user,m.data(),team)}
-  }catch(e){lvStatus(cloudUser&&cloudUser.offline?"Back online but could not reach the cloud yet. Will keep trying.":"Could not verify workspace membership.")}
-}
-function startAuthWatch(){
-  if(authWatching||!window.SALES_TRACK_FIREBASE_CONFIG)return Promise.resolve();
-  return ensureFirebase().then(function(){authWatching=true;firebase.auth().onAuthStateChanged(async function(user){
-    if(!user){if(cloudUser&&cloudUser.offline)lvStatus("Back online, but this phone is not signed in to the cloud. Log out and sign in again to upload your sales.");return}
-    await resumeCloud(user);
-  })}).catch(function(e){lvStatus(e.message)});
-}
-startAuthWatch();
-window.addEventListener("online",function(){
-  if(!(cloudUser&&cloudUser.offline))return;
-  lvStatus("Back online. Connecting…");
-  startAuthWatch().then(function(){var u=window.firebase&&firebase.auth&&firebase.auth().currentUser;
-    if(u)resumeCloud(u);else if(authWatching)lvStatus("Back online, but this phone is not signed in to the cloud. Log out and sign in again to upload your sales.")});
-});
-})();
-</script>
-<script>
-if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./service-worker.js').catch(function (err) {
-      console.warn('Sales Track offline setup could not start:', err);
-    });
-  });
-}
-</script>
-</body>
-</html>
+  var ids=myShopIds(),opts=shopList.filter(fu
