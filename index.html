@@ -108,17 +108,17 @@ pre{background:#0b1424;border:1px solid #1f2c47}
 <main>
 <header>
   <div class="header-left">
-    <button class="icon-btn" id="menuBtn">☰</button>
+    <button class="icon-btn" id="menuBtn">鈽�</button>
     <h1><span class="logo"></span>SALES TRACK</h1>
   </div>
   <div style="display:flex;gap:6px;align-items:center">
     <select id="shopSel" class="hide" style="max-width:130px;padding:6px;font-size:13px"></select>
-    <button class="icon-btn" id="refreshBtn" title="Refresh">🔄</button>
+    <button class="icon-btn" id="refreshBtn" title="Refresh">馃攧</button>
     <button class="role" id="roleBtn">Login</button>
   </div>
 </header>
 
-<div id="warn" class="card warn hide">This phone can’t save data in this browser. Open this file in Chrome from your Files app.</div>
+<div id="warn" class="card warn hide">This phone can鈥檛 save data in this browser. Open this file in Chrome from your Files app.</div>
 
 <div id="auth-card" class="card">
   <h2 id="auth-title">Sign In</h2>
@@ -162,7 +162,7 @@ pre{background:#0b1424;border:1px solid #1f2c47}
 <div class="card">
 <div class="row"><b>Total</b><b id="stot">$0.00</b></div>
 <label for="spay">Payment</label>
-<select id="spay"><option value="cash">Cash</option><option value="credit">On credit</option><option value="change">Use customer’s change</option></select>
+<select id="spay"><option value="cash">Cash</option><option value="credit">On credit</option><option value="change">Use customer鈥檚 change</option></select>
 <div id="sbal" class="sub" style="margin-top:6px"></div>
 <div id="cashbox">
 <label for="stend">Cash received ($)</label><input id="stend" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Leave empty if exact">
@@ -175,7 +175,7 @@ pre{background:#0b1424;border:1px solid #1f2c47}
 </section>
 
 <section id="stock" class="hide">
-<div class="card tot"><div><span class="sub">Today’s sales</span><b id="today">$0.00</b></div><div><span class="sub">Items low</span><b class="low" id="lowc">0</b></div></div>
+<div class="card tot"><div><span class="sub">Today鈥檚 sales</span><b id="today">$0.00</b></div><div><span class="sub">Items low</span><b class="low" id="lowc">0</b></div></div>
 <div class="card" id="admin-stock-card">
 <h2>Add an item</h2>
 <label for="inm">Item name</label><input id="inm" placeholder="e.g. Chicken">
@@ -301,7 +301,7 @@ pre{background:#0b1424;border:1px solid #1f2c47}
 <section id="dash" class="hide">
 <div class="ph" style="margin-bottom:12px"><b style="font-size:18px">Performance Dashboard</b>
 <select id="dper"><option value="month">This month</option><option value="week">This week</option><option value="today">Today</option><option value="30">Last 30 days</option></select></div>
-<div style="display:flex;gap:8px;margin-bottom:12px"><button class="go alt" id="tgtBtn" style="margin-top:0;flex:1">🎯 Set targets</button><button class="go" id="repBtn" style="margin-top:0;flex:1">📄 Daily report</button></div>
+<div style="display:flex;gap:8px;margin-bottom:12px"><button class="go alt" id="tgtBtn" style="margin-top:0;flex:1">馃幆 Set targets</button><button class="go" id="repBtn" style="margin-top:0;flex:1">馃搫 Daily report</button></div>
 <div class="card c-blue hide" id="tgtForm">
 <h2 style="margin-top:0">Targets for this shop</h2>
 <div class="sub">Leave a box empty (or 0) to skip that target.</div>
@@ -397,18 +397,18 @@ pre{background:#0b1424;border:1px solid #1f2c47}
 <div id="drawer" class="drawer hide">
   <div class="drawer-content">
     <h3>Menu</h3>
-    <div class="drawer-item" data-t="sell">🏠 Home / Sell</div>
-    <div class="drawer-item" data-t="dash">📈 Dashboard</div>
-    <div class="drawer-item" data-t="his">📊 Reports</div>
-    <div class="drawer-item" data-t="stock">📦 Products</div>
-    <div class="drawer-item" data-t="stock">🏷️ Inventory Management</div>
-    <div class="drawer-item" data-t="led">🛒 Store Management</div>
-    <div class="drawer-item" data-t="audit">👥 People & Audit</div>
-    <div class="drawer-item" data-t="notes">📝 Notes</div>
-    <div class="drawer-item" data-t="mkt">📣 Marketing</div>
-    <div class="drawer-item" data-t="syn">💬 Support & Sync</div>
-    <div class="drawer-item" data-t="syn">⚙️ Settings</div>
-    <div class="drawer-item" id="drawerLogout" style="color:var(--bad);margin-top:auto">🚪 Logout</div>
+    <div class="drawer-item" data-t="sell">馃彔 Home / Sell</div>
+    <div class="drawer-item" data-t="dash">馃搱 Dashboard</div>
+    <div class="drawer-item" data-t="his">馃搳 Reports</div>
+    <div class="drawer-item" data-t="stock">馃摝 Products</div>
+    <div class="drawer-item" data-t="stock">馃彿锔� Inventory Management</div>
+    <div class="drawer-item" data-t="led">馃洅 Store Management</div>
+    <div class="drawer-item" data-t="audit">馃懃 People & Audit</div>
+    <div class="drawer-item" data-t="notes">馃摑 Notes</div>
+    <div class="drawer-item" data-t="mkt">馃摚 Marketing</div>
+    <div class="drawer-item" data-t="syn">馃挰 Support & Sync</div>
+    <div class="drawer-item" data-t="syn">鈿欙笍 Settings</div>
+    <div class="drawer-item" id="drawerLogout" style="color:var(--bad);margin-top:auto">馃毆 Logout</div>
   </div>
 </div>
 
@@ -521,7 +521,7 @@ function stockOf(id){
     Object.keys(S.stockin).forEach(function(k){var x=S.stockin[k];stkCache[x.item]=(stkCache[x.item]||0)+x.qty});
     Object.keys(S.sales).forEach(function(k){(S.sales[k].lines||[]).forEach(function(l){stkCache[l.item]=(stkCache[l.item]||0)-l.qty})});}
   return Math.round((stkCache[id]||0)*1000)/1000}
-function lq(l){return l.unit==="kg"?l.qty+" kg "+l.name:l.qty+" × "+l.name}
+function lq(l){return l.unit==="kg"?l.qty+" kg "+l.name:l.qty+" 脳 "+l.name}
 function um(i){return i.unit==="kg"?"/kg":""}
 function su(i){return i.unit==="kg"?" kg":""}
 function balances(){var m={};sarr("tx").forEach(function(t){var k=key(t.cust),c=m[k]||(m[k]={name:String(t.cust).trim(),chg:0,cr:0});
@@ -625,9 +625,9 @@ function render(){
   var sq=key($("sq").value),sl=items.filter(function(i){return !sq||key(i.name).indexOf(sq)>-1}).sort(function(a,b){return a.name.localeCompare(b.name)});
   
   $("slist").innerHTML=sl.length?sl.map(function(i){var st=stockOf(i.id),lo=i.low==null?5:i.low;
-    return '<div class="row"><div><b>'+esc(i.name)+'</b><div class="sub">'+money(i.price)+um(i)+' · <span class="'+(st<=lo?'low':'')+'">'+st+su(i)+' in stock</span></div></div>'+(i.unit==="kg"?'<div style="display:flex;gap:6px"><input type="number" inputmode="decimal" min="0" step="0.01" placeholder="$" data-a="'+esc(i.id)+'" value="'+(cart[i.id]?Math.round(cart[i.id]*i.price*100)/100:"")+'" style="width:74px"><input type="number" inputmode="decimal" min="0" step="0.001" placeholder="kg" data-w="'+esc(i.id)+'" value="'+(cart[i.id]||"")+'" style="width:74px"></div>':'')+'<div class="qty'+(i.unit==="kg"?' hide':'')+'"><button data-m="'+esc(i.id)+'">−</button><span>'+(cart[i.id]||0)+'</span><button data-p="'+esc(i.id)+'">+</button></div></div>'}).join(""):'<div class="sub" style="margin-top:10px">No items available.</div>';
+    return '<div class="row"><div><b>'+esc(i.name)+'</b><div class="sub">'+money(i.price)+um(i)+' 路 <span class="'+(st<=lo?'low':'')+'">'+st+su(i)+' in stock</span></div></div>'+(i.unit==="kg"?'<div style="display:flex;gap:6px"><input type="number" inputmode="decimal" min="0" step="0.01" placeholder="$" data-a="'+esc(i.id)+'" value="'+(cart[i.id]?Math.round(cart[i.id]*i.price*100)/100:"")+'" style="width:74px"><input type="number" inputmode="decimal" min="0" step="0.001" placeholder="kg" data-w="'+esc(i.id)+'" value="'+(cart[i.id]||"")+'" style="width:74px"></div>':'')+'<div class="qty'+(i.unit==="kg"?' hide':'')+'"><button data-m="'+esc(i.id)+'">鈭�</button><span>'+(cart[i.id]||0)+'</span><button data-p="'+esc(i.id)+'">+</button></div></div>'}).join(""):'<div class="sub" style="margin-top:10px">No items available.</div>';
   $("stot").textContent=money(cartTotal());
-  var sc=m[key($("scust").value)];$("sbal").textContent=sc?("Change "+money(sc.chg)+" · owes "+money(sc.cr)):"";
+  var sc=m[key($("scust").value)];$("sbal").textContent=sc?("Change "+money(sc.chg)+" 路 owes "+money(sc.cr)):"";
   var isCash=$("spay").value==="cash";$("cashbox").classList.toggle("hide",!isCash);
   if(isCash){var tv0=parseFloat($("stend").value),tot0=cartTotal(),ch0=0;
     if(tot0>0&&tv0>=0){if(tv0+0.004>=tot0){ch0=Math.round((tv0-tot0)*100)/100;$("schg").className="chg";$("schg").textContent="Change to give: "+money(ch0)}else{$("schg").className="cr";$("schg").textContent="Short by "+money(tot0-tv0)}}
@@ -638,7 +638,7 @@ function render(){
   sarr("sales").forEach(function(s){if(s.ts>=t0.getTime())td+=s.total});
   
   $("tlist").innerHTML=items.length?items.map(function(i){var st=stockOf(i.id),lo=i.low==null?5:i.low;if(st<=lo)low++;
-    return '<div class="row"><div><b>'+esc(i.name)+'</b><div class="sub">'+money(i.price)+um(i)+(typeof i.cost==="number"?' · cost '+money(i.cost)+um(i):'')+'</div></div><div style="text-align:right"><span class="'+(st<=lo?'low':'')+'">'+st+su(i)+' left</span>'+(isAdmin?'<div><button class="lnk" data-pr="'+esc(i.id)+'">Price</button><button class="lnk" data-pc="'+esc(i.id)+'">Cost</button><button class="del" data-di="'+esc(i.id)+'">Remove</button></div>':'')+'</div></div>'}).join(""):'<div class="sub">No items yet.</div>';
+    return '<div class="row"><div><b>'+esc(i.name)+'</b><div class="sub">'+money(i.price)+um(i)+(typeof i.cost==="number"?' 路 cost '+money(i.cost)+um(i):'')+'</div></div><div style="text-align:right"><span class="'+(st<=lo?'low':'')+'">'+st+su(i)+' left</span>'+(isAdmin?'<div><button class="lnk" data-pr="'+esc(i.id)+'">Price</button><button class="lnk" data-pc="'+esc(i.id)+'">Cost</button><button class="del" data-di="'+esc(i.id)+'">Remove</button></div>':'')+'</div></div>'}).join(""):'<div class="sub">No items yet.</div>';
   $("today").textContent=money(td);$("lowc").textContent=low;
   
   var cur=$("isel").value;$("isel").innerHTML=items.map(function(i){return '<option value="'+esc(i.id)+'">'+esc(i.name)+'</option>'}).join("");if(cur)$("isel").value=cur;
@@ -652,11 +652,11 @@ function render(){
   
   var hs=sarr("sales").sort(function(a,b){return b.ts-a.ts}).slice(0,100);
   $("hsales").innerHTML=hs.length?hs.map(function(s){
-    return '<div class="row"><input type="checkbox" data-sel="'+esc(s.id)+'"'+(selSales[s.id]?' checked':'')+' style="width:24px;height:24px;flex:none"><div style="flex:1"><b>'+money(s.total)+'</b> <span class="sub">· '+esc(s.pay)+(s.cust?' · '+esc(s.cust):'')+' · by '+esc(s.by)+'</span><div class="sub">'+when(s.ts)+'<br>'+(s.lines||[]).map(function(l){return esc(lq(l))}).join(", ")+'</div></div><div><button class="lnk" data-rs="'+esc(s.id)+'">Receipt</button>'+(isAdmin?'<button class="del" data-ds="'+esc(s.id)+'">Delete</button>':'')+'</div></div>'}).join(""):'<div class="sub">No sales yet.</div>';
+    return '<div class="row"><input type="checkbox" data-sel="'+esc(s.id)+'"'+(selSales[s.id]?' checked':'')+' style="width:24px;height:24px;flex:none"><div style="flex:1"><b>'+money(s.total)+'</b> <span class="sub">路 '+esc(s.pay)+(s.cust?' 路 '+esc(s.cust):'')+' 路 by '+esc(s.by)+'</span><div class="sub">'+when(s.ts)+'<br>'+(s.lines||[]).map(function(l){return esc(lq(l))}).join(", ")+'</div></div><div><button class="lnk" data-rs="'+esc(s.id)+'">Receipt</button>'+(isAdmin?'<button class="del" data-ds="'+esc(s.id)+'">Delete</button>':'')+'</div></div>'}).join(""):'<div class="sub">No sales yet.</div>';
   
   var h=sarr("tx").sort(function(a,b){return b.ts-a.ts}).slice(0,100);
   $("hlist").innerHTML=h.length?h.map(function(t){
-    return '<div class="row"><div><b>'+esc(t.cust)+'</b> <span class="sub">· '+esc(LABEL[t.type]||t.type)+' · by '+esc(t.by)+'</span><div class="sub">'+when(t.ts)+'</div></div><div style="text-align:right"><div class="'+(t.type==="change"||t.type==="pay"?'chg':'cr')+'">'+money(t.amt)+'</div>'+(isAdmin?'<button class="del" data-dt="'+esc(t.id)+'">Delete</button>':'')+'</div></div>'}).join(""):'<div class="sub">No entries yet.</div>';
+    return '<div class="row"><div><b>'+esc(t.cust)+'</b> <span class="sub">路 '+esc(LABEL[t.type]||t.type)+' 路 by '+esc(t.by)+'</span><div class="sub">'+when(t.ts)+'</div></div><div style="text-align:right"><div class="'+(t.type==="change"||t.type==="pay"?'chg':'cr')+'">'+money(t.amt)+'</div>'+(isAdmin?'<button class="del" data-dt="'+esc(t.id)+'">Delete</button>':'')+'</div></div>'}).join(""):'<div class="sub">No entries yet.</div>';
 
   renderTeam();updSel();if(!$("dash").classList.contains("hide"))renderDash();renderNotes();
 
@@ -676,7 +676,7 @@ function render(){
     $("pUnk").textContent=uk?(uk+" sales have no cost price."):"";
     $("pSc").textContent=money(cv);$("pSr").textContent=money(rt);
     var xs=pArr("exp").sort(function(a,b){return b.ts-a.ts}).slice(0,100);
-    $("xlist").innerHTML=xs.length?xs.map(function(x){return '<div class="row"><div><b>'+esc(x.title)+'</b> <span class="sub">· '+esc(x.category)+' · by '+esc(x.by)+'</span><div class="sub">'+when(x.ts)+'</div></div><div style="text-align:right"><div class="cr">'+money(x.amount)+'</div><button class="del" data-dx="'+esc(x.id)+'">Delete</button></div></div>'}).join(""):'<div class="sub">No expenses.</div>';
+    $("xlist").innerHTML=xs.length?xs.map(function(x){return '<div class="row"><div><b>'+esc(x.title)+'</b> <span class="sub">路 '+esc(x.category)+' 路 by '+esc(x.by)+'</span><div class="sub">'+when(x.ts)+'</div></div><div style="text-align:right"><div class="cr">'+money(x.amount)+'</div><button class="del" data-dx="'+esc(x.id)+'">Delete</button></div></div>'}).join(""):'<div class="sub">No expenses.</div>';
   }
 }
 
@@ -811,7 +811,7 @@ $("save").onclick=function(){
 
 /* ---- receipts ---- */
 var curRcpt="";
-function ascii(t){return String(t).replace(/[   ]/g," ").replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/×/g,"x").replace(/[–—]/g,"-").replace(/[^\x20-\x7E\n]/g,"?")}
+function ascii(t){return String(t).replace(/[聽鈥夆€痌/g," ").replace(/[鈥樷€橾/g,"'").replace(/[鈥溾€漖/g,'"').replace(/脳/g,"x").replace(/[鈥撯€擼/g,"-").replace(/[^\x20-\x7E\n]/g,"?")}
 function padLR(l,r,w){l=ascii(l);r=ascii(r);if(l.length+r.length+1>w)l=l.slice(0,Math.max(1,w-r.length-1));return l+Array(w-l.length-r.length+1).join(" ")+r}
 function ctr(t,w){t=ascii(t).slice(0,w);return Array(Math.floor((w-t.length)/2)+1).join(" ")+t}
 function receiptText(s){
@@ -872,7 +872,7 @@ $("imp").onclick=function(){var n=mergeIn($("paste").value.trim());if(n<0)return
 function hr12(h){var x=h%12===0?12:h%12;return x+(h<12?" AM":" PM")}
 var CLR={b:"#3b82f6",g:"#22c55e",y:"#f59e0b",r:"#ef4444",c:"#38bdf8",p:"#a78bfa"};
 function fmtK(v){return v>=1000?(v/1000).toFixed(1)+"k":String(Math.round(v))}
-function dlt(c,p){if(p<=0)return c>0?'<span class="chg">New</span>':'<span class="sub">no change</span>';var x=Math.round((c-p)/p*100);return '<span class="'+(x>=0?'chg':'cr')+'">'+(x>=0?'↗ +':'↘ ')+x+'%</span>'}
+function dlt(c,p){if(p<=0)return c>0?'<span class="chg">New</span>':'<span class="sub">no change</span>';var x=Math.round((c-p)/p*100);return '<span class="'+(x>=0?'chg':'cr')+'">'+(x>=0?'鈫� +':'鈫� ')+x+'%</span>'}
 function spark(vals,col,id){
   var n=vals.length;if(n<2)return"";var mx=Math.max.apply(null,vals),mn=Math.min.apply(null,vals);if(mx===mn)mx+=1;
   var W=120,H=36,d=vals.map(function(v,i){return (i?"L":"M")+(i*W/(n-1)).toFixed(1)+" "+(H-3-(v-mn)/(mx-mn)*(H-8)).toFixed(1)}).join(" ");
@@ -949,16 +949,16 @@ function renderDash(){
 
   // insights
   var ins=[];
-  if(yd.t>0)ins.push("📊 Today so far: "+money(td.t)+" vs "+money(yd.t)+" yesterday ("+(td.t>=yd.t?"+":"")+Math.round((td.t-yd.t)/yd.t*100)+"%).");
-  if(tot30>=5){var bh=0;for(q=1;q<24;q++)if(h30[q]>h30[bh])bh=q;ins.push("⏰ Busiest time: "+hr12(bh)+" to "+hr12((bh+1)%24)+" (last 30 days).")}
-  if(out.length)ins.push("🚫 Out of stock: "+out.slice(0,8).join(", ")+(out.length>8?" and "+(out.length-8)+" more":"")+".");
-  if(soon.length)ins.push("⚠️ Running out soon: "+soon.slice(0,6).join("; ")+".");
-  if(low.length)ins.push("📉 Low stock: "+low.slice(0,8).join(", ")+".");
-  if(slow.length)ins.push("🐌 No sales in 14 days: "+slow.slice(0,6).join(", ")+".");
-  if(tCr>0.004)ins.push("💳 Customers owe you "+money(tCr)+" in total.");
-  if(tCh>0.004)ins.push("🪙 You are holding "+money(tCh)+" in customer change.");
+  if(yd.t>0)ins.push("馃搳 Today so far: "+money(td.t)+" vs "+money(yd.t)+" yesterday ("+(td.t>=yd.t?"+":"")+Math.round((td.t-yd.t)/yd.t*100)+"%).");
+  if(tot30>=5){var bh=0;for(q=1;q<24;q++)if(h30[q]>h30[bh])bh=q;ins.push("鈴� Busiest time: "+hr12(bh)+" to "+hr12((bh+1)%24)+" (last 30 days).")}
+  if(out.length)ins.push("馃毇 Out of stock: "+out.slice(0,8).join(", ")+(out.length>8?" and "+(out.length-8)+" more":"")+".");
+  if(soon.length)ins.push("鈿狅笍 Running out soon: "+soon.slice(0,6).join("; ")+".");
+  if(low.length)ins.push("馃搲 Low stock: "+low.slice(0,8).join(", ")+".");
+  if(slow.length)ins.push("馃悓 No sales in 14 days: "+slow.slice(0,6).join(", ")+".");
+  if(tCr>0.004)ins.push("馃挸 Customers owe you "+money(tCr)+" in total.");
+  if(tCh>0.004)ins.push("馃獧 You are holding "+money(tCh)+" in customer change.");
   var unk=0;if(admin)sales.forEach(function(x){if(x.ts>=from&&x.unk!==false)unk++});
-  if(unk)ins.push("ℹ️ "+unk+" sales in this period have no cost price, so profit looks higher than it is. Add cost prices in Stock.");
+  if(unk)ins.push("鈩癸笍 "+unk+" sales in this period have no cost price, so profit looks higher than it is. Add cost prices in Stock.");
 
   // ---- KPI cards ----
   var avg=cur.n?cur.t/cur.n:0,pavg=prv.n?prv.t/prv.n:0,pbar=prv.n>0?Math.min(100,Math.round(cur.n/prv.n*100)):(cur.n>0?100:0);
@@ -974,14 +974,14 @@ function renderDash(){
   var tg=getTargets(),mAg=agg(m0,now+1),pm0=new Date(m0);pm0.setMonth(pm0.getMonth()-1);pm0=pm0.getTime();
   var lm=agg(pm0,Math.min(m0,pm0+(now-m0))),nd=new Date(now),dim=new Date(nd.getFullYear(),nd.getMonth()+1,0).getDate(),dl=dim-nd.getDate()+1;
   var tb="";
-  if(tg.day>0){var rd=tg.day-td.t;tb+=tbar("Today's sales",td.t,tg.day,money,rd>0?money(rd)+" to go":"Target reached 🎉")}
-  if(tg.month>0){var rm=tg.month-mAg.t,proj=mAg.t/nd.getDate()*dim;tb+=tbar("Sales this month",mAg.t,tg.month,money,rm>0?money(rm)+" to go · "+money(rm/dl)+"/day needed":"Target reached 🎉","On this pace you will finish on "+money(proj)+(proj>=tg.month?" ✅":" (below target)"))}
+  if(tg.day>0){var rd=tg.day-td.t;tb+=tbar("Today's sales",td.t,tg.day,money,rd>0?money(rd)+" to go":"Target reached 馃帀")}
+  if(tg.month>0){var rm=tg.month-mAg.t,proj=mAg.t/nd.getDate()*dim;tb+=tbar("Sales this month",mAg.t,tg.month,money,rm>0?money(rm)+" to go 路 "+money(rm/dl)+"/day needed":"Target reached 馃帀","On this pace you will finish on "+money(proj)+(proj>=tg.month?" 鉁�":" (below target)"))}
   if(admin&&tg.profit>0){
     var xm=0,wmm=0;pArr("exp").forEach(function(x){if(x.ts>=m0)xm+=x.amount});pArr("stockin").forEach(function(x){if(x.waste&&x.ts>=m0)wmm+=x.wcost||0});
-    var np=mAg.g-xm-wmm,rp=tg.profit-np;tb+=tbar("Net profit this month",np,tg.profit,money,rp>0?money(rp)+" to go":"Target reached 🎉")}
+    var np=mAg.g-xm-wmm,rp=tg.profit-np;tb+=tbar("Net profit this month",np,tg.profit,money,rp>0?money(rp)+" to go":"Target reached 馃帀")}
   if(tg.growth>0){var gr=lm.t>0?(mAg.t-lm.t)/lm.t*100:(mAg.t>0?100:0),rg=tg.growth-gr;
-    tb+=tbar("Sales growth",Math.max(0,gr),tg.growth,pcf,rg>0?pcf(rg)+" to go":"Target reached 🎉","Now "+(gr>=0?"+":"")+pcf(gr)+" vs the same days last month ("+money(lm.t)+")")}
-  h+=pn("c-green","Targets",tb||('<div class="sub">'+(admin?'No targets yet. Tap 🎯 Set targets above to add your daily, monthly and growth goals.':'No targets set yet. Ask your administrator to set them.')+'</div>'),'<span class="sub">'+nd.toLocaleDateString(undefined,{month:"long",year:"numeric"})+'</span>');
+    tb+=tbar("Sales growth",Math.max(0,gr),tg.growth,pcf,rg>0?pcf(rg)+" to go":"Target reached 馃帀","Now "+(gr>=0?"+":"")+pcf(gr)+" vs the same days last month ("+money(lm.t)+")")}
+  h+=pn("c-green","Targets",tb||('<div class="sub">'+(admin?'No targets yet. Tap 馃幆 Set targets above to add your daily, monthly and growth goals.':'No targets set yet. Ask your administrator to set them.')+'</div>'),'<span class="sub">'+nd.toLocaleDateString(undefined,{month:"long",year:"numeric"})+'</span>');
 
   // ---- admin money card ----
   if(admin){
@@ -1114,7 +1114,7 @@ function renderNotes(){
   var list=pArr("notes").sort(function(a,b){return (a.done?1:0)-(b.done?1:0)||b.ts-a.ts});
   el.innerHTML=list.length?list.map(function(n){
     var can=S.role==="Administrator"||(cloudUser&&n.uid===cloudUser.uid);
-    return '<div class="row" style="align-items:flex-start"><div style="flex:1;'+(n.done?'opacity:.55;text-decoration:line-through':'')+'"><div style="white-space:pre-wrap">'+esc(n.text)+'</div><div class="sub">'+esc(n.by||"")+' · '+when(n.ts)+'</div></div><div style="text-align:right"><button class="lnk" data-nd="'+esc(n.id)+'">'+(n.done?'Reopen':'Done')+'</button>'+(can?'<button class="del" data-nx="'+esc(n.id)+'">Delete</button>':'')+'</div></div>'}).join(""):'<div class="sub">No notes yet.</div>';
+    return '<div class="row" style="align-items:flex-start"><div style="flex:1;'+(n.done?'opacity:.55;text-decoration:line-through':'')+'"><div style="white-space:pre-wrap">'+esc(n.text)+'</div><div class="sub">'+esc(n.by||"")+' 路 '+when(n.ts)+'</div></div><div style="text-align:right"><button class="lnk" data-nd="'+esc(n.id)+'">'+(n.done?'Reopen':'Done')+'</button>'+(can?'<button class="del" data-nx="'+esc(n.id)+'">Delete</button>':'')+'</div></div>'}).join(""):'<div class="sub">No notes yet.</div>';
 }
 $("nsave").onclick=function(){
   var t=$("ntext").value.trim();
@@ -1291,4 +1291,183 @@ function myShopIds(){
 }
 function renderShops(){
   var sel=$("shopSel"),admin=S.role==="Administrator";
-  var ids=myShopIds(),opts=shopList.filter(fu
+  var ids=myShopIds(),opts=shopList.filter(function(x){return ids.indexOf(x.id)>-1});
+  if(!opts.length)opts=[{id:"main",name:"Main shop"}];
+  if(!opts.some(function(x){return x.id===S.shop}))S.shop=opts[0].id;
+  var html=opts.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>'}).join("");
+  if(admin&&opts.length>1)html+='<option value="__all">All shops</option>';
+  if(sel){sel.innerHTML=html;sel.value=(admin&&viewAll)?"__all":S.shop;sel.classList.toggle("hide",!(admin||opts.length>1));}
+  var rs=$("rshop");if(rs){var cur=rs.value;rs.innerHTML=shopList.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>'}).join("");if(cur)rs.value=cur}
+  var sl=$("shoplist");if(sl)sl.innerHTML=shopList.map(function(x){return '<div class="row"><b>'+esc(x.name)+'</b><span class="sub">'+(x.id===S.shop?'viewing now ':'')+(x.id!=="main"?'<button class="del" data-delshop="'+esc(x.id)+'">Remove</button>':'')+'</span></div>'}).join("");
+}
+function startShopWatch(){
+  if(shopUnsub||!cloudUser||!S.live)return;
+  try{shopUnsub=firebase.firestore().collection("teams").doc(S.live.t).collection("shops").onSnapshot(function(sn){
+    var l=sn.docs.map(function(d){var x=d.data();return {id:d.id,name:x.name||d.id}}).sort(function(a,b){return a.name.localeCompare(b.name)});
+    if(!l.some(function(x){return x.id==="main"}))l.unshift({id:"main",name:"Main shop"});
+    try{localStorage.setItem("salestrack_shops_"+S.live.t,JSON.stringify(l))}catch(x){}shopList=l;renderShops();render();
+  },function(){shopList=[{id:"main",name:"Main shop"}];renderShops()})}catch(e){}
+}
+function stopShopWatch(){if(shopUnsub){shopUnsub();shopUnsub=null}shopList=[{id:"main",name:"Main shop"}];viewAll=false}
+$("shopSel").onchange=function(){
+  if(this.value==="__all"){viewAll=true}else{viewAll=false;S.shop=this.value;save()}
+  cart={};render();
+};
+$("shoplist").onclick=async function(e){var id=e.target.dataset.delshop;if(!id||S.role!=="Administrator"||!S.live)return;
+  var used=["items","stockin","sales","tx","exp"].reduce(function(n,c){return n+arr(c).filter(function(r){return (r.shop||"main")===id}).length},0);
+  if(used)return say("shopMsg","This shop still has "+used+" records. Switch to it and use Clear test data first.",true);
+  var staff=teamList.filter(function(m){return m.active!==false&&(m.shops||[]).indexOf(id)>-1});
+  if(staff.length)return say("shopMsg","Disable "+staff.map(function(m){return m.name}).join(", ")+" in Team Members first.",true);
+  if(!confirm("Remove shop \""+shopName(id)+"\"?"))return;
+  try{await firebase.firestore().collection("teams").doc(S.live.t).collection("shops").doc(id).delete();if(S.shop===id){S.shop="main";save()}say("shopMsg","Shop removed.")}catch(x){say("shopMsg",friendlyAuthError(x),true)}};
+$("shopAdd").onclick=async function(){
+  var name=$("shopname").value.trim();
+  if(S.role!=="Administrator"||!S.live)return say("shopMsg","Only administrators can add shops.",true);
+  if(!name)return say("shopMsg","Enter a shop name.",true);
+  var id="s"+Date.now().toString(36);
+  try{await firebase.firestore().collection("teams").doc(S.live.t).collection("shops").doc(id).set({name:name,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    $("shopname").value="";say("shopMsg",name+" added.");
+  }catch(e){say("shopMsg",friendlyAuthError(e),true)}
+};
+
+/* ---- team management (cloud) ---- */
+var teamList=[],teamUnsub=null;
+function renderTeam(){
+  var el=$("ulist");if(!el)return;
+  if(!cloudUser){el.innerHTML='<div class="sub">Sign in to see your team.</div>';return;}
+  if(!teamList.length){el.innerHTML='<div class="sub">No team members loaded yet.</div>';return;}
+  var admin=S.role==="Administrator";
+  el.innerHTML=teamList.map(function(m){
+    var me=m.uid===cloudUser.uid,on=m.active!==false;
+    return '<div class="row"><div><b>'+esc(m.name||"")+'</b>'+(me?' <span class="sub">(you)</span>':'')+'<div class="sub">'+esc(m.email||"")+'</div><div class="sub">'+esc(m.role||"Employee")+(m.role==="Administrator"?' 路 all shops':' 路 '+esc(shopName((m.shops&&m.shops[0])||"main")))+' 路 '+(on?'Active':'<span class="low">Disabled</span>')+'</div></div>'+
+    (admin&&!me?'<div style="text-align:right"><button class="del" data-tog="'+esc(m.uid)+'">'+(on?'Disable':'Enable')+'</button> <button class="del" data-role="'+esc(m.uid)+'">Make '+(m.role==="Administrator"?'Employee':'Admin')+'</button></div>':'')+'</div>'}).join("");
+}
+function startTeamWatch(){
+  if(teamUnsub||!cloudUser||!S.live||S.role!=="Administrator")return;
+  try{teamUnsub=firebase.firestore().collection("teams").doc(S.live.t).collection("members").onSnapshot(function(sn){
+    teamList=sn.docs.map(function(d){var x=d.data();x.uid=x.uid||d.id;return x}).sort(function(a,b){return String(a.name).localeCompare(String(b.name))});renderTeam();
+  },function(e){teamList=[];var el=$("ulist");if(el)el.innerHTML='<div class="sub">Could not load team: '+esc(e.code||e.message)+'</div>'})}catch(e){}
+}
+function stopTeamWatch(){if(teamUnsub){teamUnsub();teamUnsub=null}teamList=[]}
+function friendlyAuthError(e){
+  var c=e&&e.code||"";
+  if(c==="auth/email-already-in-use")return "That email already has a login. Ask them to sign in, or use a different email.";
+  if(c==="auth/invalid-email")return "That email address is not valid.";
+  if(c==="auth/weak-password")return "Password is too weak. Use at least 8 characters.";
+  if(c==="permission-denied"||c==="firestore/permission-denied")return "Permission denied. Only active Administrators can add members. Check the Firestore rules are published.";
+  return e&&e.message||"Could not add team member.";
+}
+$("regGo").onclick=async function(){
+  var name=$("rname").value.trim(),email=$("ruser").value.trim().toLowerCase(),pass=$("rpass").value,role=$("rrole").value;
+  if(!cloudUser||!S.live)return say("regMsg","Sign in to your workspace first.",true);
+  if(S.role!=="Administrator")return say("regMsg","Only administrators can add team members.",true);
+  if(!name||!email||!pass)return say("regMsg","Enter name, email and a temporary password.",true);
+  if(pass.length<8)return say("regMsg","Password must be at least 8 characters.",true);
+  var btn=$("regGo");btn.disabled=true;say("regMsg","Creating account鈥�");
+  var secondary=null;
+  try{
+    await ensureFirebase();
+    secondary=firebase.initializeApp(window.SALES_TRACK_FIREBASE_CONFIG,"staffcreate"+Date.now());
+    var cred=await secondary.auth().createUserWithEmailAndPassword(email,pass);
+    var uid=cred.user.uid;
+    await firebase.firestore().collection("teams").doc(S.live.t).collection("members").doc(uid).set({uid:uid,email:email,name:name,role:role,shops:(role==="Administrator"?[]:[$("rshop").value||"main"]),active:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    await secondary.auth().signOut();
+    $("rname").value="";$("ruser").value="";$("rpass").value="";$("rrole").value="Employee";
+    say("regMsg",name+" added. Share: email "+email+", the temporary password, and workspace ID "+S.live.t+".");
+  }catch(e){say("regMsg",friendlyAuthError(e),true)}
+  finally{if(secondary){try{await secondary.delete()}catch(x){}}btn.disabled=false}
+};
+$("ulist").addEventListener("click",async function(ev){
+  var b=ev.target.closest("button");if(!b||S.role!=="Administrator"||!S.live)return;
+  var uid=b.getAttribute("data-tog")||b.getAttribute("data-role");if(!uid)return;
+  var m=teamList.filter(function(x){return x.uid===uid})[0];if(!m)return;
+  var ref=firebase.firestore().collection("teams").doc(S.live.t).collection("members").doc(uid);
+  try{
+    if(b.hasAttribute("data-tog")){
+      var on=m.active!==false;
+      if(!confirm((on?"Disable ":"Enable ")+(m.name||m.email)+"?"))return;
+      await ref.update({active:!on});
+    }else{
+      var nr=m.role==="Administrator"?"Employee":"Administrator";
+      if(!confirm("Change "+(m.name||m.email)+" to "+nr+"?"))return;
+      await ref.update({role:nr});
+    }
+  }catch(e){alert(friendlyAuthError(e))}
+});
+
+/* ---- authenticated Firestore multi-device sync ---- */
+var fs=null,unsubs=[],pushing=false;
+function delOk(k){return /^(items|stockin|sales|tx|exp|audit|users|notes|targets)\/[^\/]+$/.test(k)}
+function mark(k){if(S.live&&S.dirty.indexOf(k)<0)S.dirty.push(k)}
+function lvStatus(s){if($("lvst"))$("lvst").textContent=s}
+var rtimer=null;
+function scheduleRender(){if(rtimer)return;rtimer=setTimeout(function(){rtimer=null;render()},150)}
+function connect(){
+  if(!S.live||!cloudUser||fs)return;
+  try{fs=firebase.firestore();var team=fs.collection("teams").doc(S.live.t);lvStatus("Connecting securely to workspace鈥�");
+    var __admin=S.role==="Administrator",__ids=myShopIds();
+    SYNC_COLS.forEach(function(c){
+      if(c==="audit"&&!__admin)return;
+      var __q=team.collection(c);
+      if(!__admin){__q=__q.where("shop","in",__ids.slice(0,10))}
+      unsubs.push(__q.onSnapshot(function(sn){var changed=false;sn.docChanges().forEach(function(ch){var id=ch.doc.id;if(ch.type==="removed"){if(S[c][id]){delete S[c][id];changed=true}return;}var data=ch.doc.data();if(JSON.stringify(S[c][id])!==JSON.stringify(data)){S[c][id]=data;changed=true;}});if(changed){save();scheduleRender();}lvStatus("Connected 路 cloud changes are synchronising across devices.");},function(e){lvStatus("Cloud sync error: "+(e.code||"permission-denied")+". Check Firestore rules and workspace membership.")}));});
+    unsubs.push(team.onSnapshot(function(doc){if(!doc.exists){lvStatus("Workspace not found.");return;}},function(){lvStatus("Cannot read workspace. Check access rules.")}));
+    SHOP_COLS.forEach(function(c){Object.keys(S[c]||{}).forEach(function(id){if(!S[c][id].shop){S[c][id].shop="main";mark(c+"/"+id)}})});save();
+    if(!S.seeded){SYNC_COLS.forEach(function(c){Object.keys(S[c]||{}).forEach(function(id){mark(c+"/"+id)})});S.seeded=true;save();}
+    push();
+  }catch(e){fs=null;lvStatus("Could not start cloud sync: "+e.message)}
+}
+function push(){
+  if(!fs||!S.live||!S.dirty.length||pushing)return;
+  pushing=true;var keys=S.dirty.slice(0,400),batch=fs.batch(),team=fs.collection("teams").doc(S.live.t);
+  keys.forEach(function(k){if(k.indexOf("d:")===0){var dk=k.slice(2);if(delOk(dk)&&SYNC_COLS.indexOf(dk.split("/")[0])>-1){var a=dk.split("/");batch.delete(team.collection(a[0]).doc(a[1]));}}
+    else{var p=k.split("/");if(SYNC_COLS.indexOf(p[0])>-1&&S[p[0]][p[1]])batch.set(team.collection(p[0]).doc(p[1]),S[p[0]][p[1]]);}});
+  batch.commit().then(function(){S.dirty=S.dirty.filter(function(k){return keys.indexOf(k)<0});save();pushing=false;if(S.dirty.length)push();}).catch(function(e){pushing=false;lvStatus("Cloud write failed: "+(e.code||e.message)+". Check membership and security rules.")});
+}
+$("copyWorkspace").onclick=function(){if(!S.live)return lvStatus("No workspace connected.");if(navigator.clipboard)navigator.clipboard.writeText(S.live.t).then(function(){lvStatus("Workspace ID copied.")});else lvStatus("Clipboard unavailable. Workspace ID: "+S.live.t)};
+$("send").onclick=function(){var txt=pack(),a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"application/json"}));a.download="salestrack-backup.json";a.click();say("smsg2","Backup downloaded. Store it safely.")};
+$("copy").onclick=function(){navigator.clipboard.writeText(pack()).then(function(){say("smsg2","Backup copied.")}).catch(function(){say("smsg2","Clipboard unavailable.",true)})};
+$("file").onchange=function(){var f=this.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var n=mergeIn(r.result);if(n<0)return say("smsg2","Invalid backup file.",true);say("smsg2","Imported "+n+" records.");push();render()};r.readAsText(f)};
+$("imp").onclick=function(){var n=mergeIn($("paste").value.trim());if(n<0)return say("smsg2","Invalid backup text.",true);say("smsg2","Imported "+n+" records.");push();render()};
+
+load();S.live=null;$("pbiz").value=S.set.biz;$("ppw").value=String(S.set.pw);$("pfoot").value=S.set.foot;$("pauto").checked=!!S.set.auto;save();checkAuthShell();var authWatching=false;
+async function resumeCloud(user){
+  var team=$("teamid").value.trim()||localStorage.getItem("salestrack_team_id");
+  if(!team){lvStatus("Enter your workspace ID to sign in.");return}
+  try{var m=await firebase.firestore().collection("teams").doc(team).collection("members").doc(user.uid).get();
+    if(m.exists){$("teamid").value=team;localStorage.setItem("salestrack_team_id",team);setCloudIdentity(user,m.data(),team)}
+  }catch(e){lvStatus(cloudUser&&cloudUser.offline?"Back online but could not reach the cloud yet. Will keep trying.":"Could not verify workspace membership.")}
+}
+function startAuthWatch(){
+  if(authWatching||!window.SALES_TRACK_FIREBASE_CONFIG)return Promise.resolve();
+  return ensureFirebase().then(function(){authWatching=true;firebase.auth().onAuthStateChanged(async function(user){
+    if(!user){if(cloudUser&&cloudUser.offline)lvStatus("Back online, but this phone is not signed in to the cloud. Log out and sign in again to upload your sales.");return}
+    await resumeCloud(user);
+  })}).catch(function(e){lvStatus(e.message)});
+}
+startAuthWatch();
+window.addEventListener("online",function(){
+  if(!(cloudUser&&cloudUser.offline))return;
+  lvStatus("Back online. Connecting鈥�");
+  startAuthWatch().then(function(){var u=window.firebase&&firebase.auth&&firebase.auth().currentUser;
+    if(u)resumeCloud(u);else if(authWatching)lvStatus("Back online, but this phone is not signed in to the cloud. Log out and sign in again to upload your sales.")});
+});
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.addEventListener('message', function (e) {
+    if (e.data && e.data.type === 'update') { var b = document.getElementById('updbar'); if (b) b.classList.remove('hide'); }
+  });
+  document.getElementById('updbtn').onclick = function () { location.reload(); };
+  function askUpdate() { navigator.serviceWorker.ready.then(function (r) { if (r.active) r.active.postMessage({ type: 'check' }); }); }
+  window.addEventListener('load', function () {
+    askUpdate(); setTimeout(askUpdate, 800); setTimeout(askUpdate, 2500); setTimeout(askUpdate, 6000); setTimeout(askUpdate, 15000);
+    navigator.serviceWorker.register('./service-worker.js').catch(function (err) {
+      console.warn('Sales Track offline setup could not start:', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
